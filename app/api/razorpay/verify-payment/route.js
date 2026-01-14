@@ -1,14 +1,28 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function POST(request) {
   try {
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Razorpay is not configured: set RAZORPAY_KEY_SECRET",
+        },
+        { status: 500 }
+      );
+    }
+
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await request.json();
 
     // Create the expected signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .createHmac("sha256", keySecret)
       .update(body.toString())
       .digest("hex");
 
