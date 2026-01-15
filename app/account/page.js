@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import Link from "next/link";
@@ -39,7 +39,7 @@ export default function AccountPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">My Account</span>
       </nav>
@@ -61,8 +61,8 @@ export default function AccountPage() {
       {/* Quick Links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Link href="/account/orders" className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </div>
@@ -96,7 +96,7 @@ export default function AccountPage() {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-          <Link href="/account/orders" className="text-sm text-purple-600 hover:text-purple-700">
+          <Link href="/account/orders" className="text-sm text-red-600 hover:text-red-700">
             View all
           </Link>
         </div>
@@ -135,7 +135,7 @@ export default function AccountPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
             <p className="text-gray-600 mb-4">No orders yet</p>
-            <Link href="/" className="text-purple-600 hover:text-purple-700 font-medium">
+            <Link href="/" className="text-red-600 hover:text-red-700 font-medium">
               Start Shopping
             </Link>
           </div>
@@ -144,3 +144,4 @@ export default function AccountPage() {
     </div>
   );
 }
+

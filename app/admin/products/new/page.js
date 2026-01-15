@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ export default function NewProductPage() {
   if (isLoading || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     );
   }
@@ -104,7 +104,7 @@ export default function NewProductPage() {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
 
@@ -118,7 +118,7 @@ export default function NewProductPage() {
                       onChange={handleChange}
                       required
                       rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
 
@@ -131,7 +131,7 @@ export default function NewProductPage() {
                       value={formData.category}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
                       <option value="purse">Purse</option>
                       <option value="wallet">Wallet</option>
@@ -146,7 +146,7 @@ export default function NewProductPage() {
                         name="inStock"
                         checked={formData.inStock}
                         onChange={handleChange}
-                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                        className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
                       />
                       <span className="text-sm text-gray-700">In Stock</span>
                     </label>
@@ -169,7 +169,7 @@ export default function NewProductPage() {
                       onChange={handleChange}
                       required
                       min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
 
@@ -183,7 +183,7 @@ export default function NewProductPage() {
                       value={formData.originalPrice}
                       onChange={handleChange}
                       min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                 </div>
@@ -204,7 +204,7 @@ export default function NewProductPage() {
                       onChange={handleChange}
                       required
                       placeholder="https://..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
 
@@ -219,7 +219,7 @@ export default function NewProductPage() {
                           value={img}
                           onChange={(e) => handleArrayChange("images", index, e.target.value)}
                           placeholder="https://..."
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                         {formData.images.length > 1 && (
                           <button
@@ -237,7 +237,7 @@ export default function NewProductPage() {
                     <button
                       type="button"
                       onClick={() => addArrayItem("images")}
-                      className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+                      className="text-red-600 hover:text-red-700 text-sm font-medium"
                     >
                       + Add Image
                     </button>
@@ -255,7 +255,7 @@ export default function NewProductPage() {
                       value={color}
                       onChange={(e) => handleArrayChange("colors", index, e.target.value)}
                       placeholder="e.g., Black, Brown, Red"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                     {formData.colors.length > 1 && (
                       <button
@@ -273,7 +273,7 @@ export default function NewProductPage() {
                 <button
                   type="button"
                   onClick={() => addArrayItem("colors")}
-                  className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+                  className="text-red-600 hover:text-red-700 text-sm font-medium"
                 >
                   + Add Color
                 </button>
@@ -289,7 +289,7 @@ export default function NewProductPage() {
                       value={feature}
                       onChange={(e) => handleArrayChange("features", index, e.target.value)}
                       placeholder="e.g., Genuine leather, Multiple compartments"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                     {formData.features.length > 1 && (
                       <button
@@ -307,7 +307,7 @@ export default function NewProductPage() {
                 <button
                   type="button"
                   onClick={() => addArrayItem("features")}
-                  className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+                  className="text-red-600 hover:text-red-700 text-sm font-medium"
                 >
                   + Add Feature
                 </button>
@@ -325,7 +325,7 @@ export default function NewProductPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-purple-400"
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400"
                 >
                   {saving ? "Saving..." : "Create Product"}
                 </button>
@@ -337,3 +337,4 @@ export default function NewProductPage() {
     </div>
   );
 }
+

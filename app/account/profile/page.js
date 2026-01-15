@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -60,9 +60,9 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
-        <Link href="/account" className="text-gray-500 hover:text-purple-600">Account</Link>
+        <Link href="/account" className="text-gray-500 hover:text-red-600">Account</Link>
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">Profile</span>
       </nav>
@@ -80,7 +80,7 @@ export default function ProfilePage() {
       <div className="bg-white rounded-xl shadow-sm p-6">
         {/* Profile Avatar */}
         <div className="flex items-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full flex items-center justify-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-pink-500 rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-2xl">
               {user.name?.charAt(0).toUpperCase()}
             </span>
@@ -102,7 +102,7 @@ export default function ProfilePage() {
                 value={formData.name}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   isEditing ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-50"
                 }`}
               />
@@ -115,7 +115,7 @@ export default function ProfilePage() {
                 value={formData.email}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   isEditing ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-50"
                 }`}
               />
@@ -128,7 +128,7 @@ export default function ProfilePage() {
                 value={formData.phone}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   isEditing ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-50"
                 }`}
               />
@@ -140,7 +140,7 @@ export default function ProfilePage() {
               <>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Save Changes
                 </button>
@@ -163,7 +163,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
               >
                 Edit Profile
               </button>
@@ -200,3 +200,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

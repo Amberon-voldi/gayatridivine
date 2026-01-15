@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,7 +44,7 @@ export default function AdminSettingsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export default function AdminSettingsPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
                       activeTab === tab.id
-                        ? "text-purple-600 border-b-2 border-purple-600"
+                        ? "text-red-600 border-b-2 border-red-600"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -131,7 +131,7 @@ export default function AdminSettingsPage() {
                         name="storeName"
                         value={storeSettings.storeName}
                         onChange={handleStoreChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
 
@@ -144,7 +144,7 @@ export default function AdminSettingsPage() {
                         name="storeEmail"
                         value={storeSettings.storeEmail}
                         onChange={handleStoreChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
 
@@ -157,7 +157,7 @@ export default function AdminSettingsPage() {
                         name="storePhone"
                         value={storeSettings.storePhone}
                         onChange={handleStoreChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
 
@@ -170,7 +170,7 @@ export default function AdminSettingsPage() {
                         value={storeSettings.storeAddress}
                         onChange={handleStoreChange}
                         rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
 
@@ -182,11 +182,11 @@ export default function AdminSettingsPage() {
                         name="currency"
                         value={storeSettings.currency}
                         onChange={handleStoreChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
                         <option value="INR">INR (₹)</option>
                         <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
+                        <option value="EUR">EUR (â‚¬)</option>
                       </select>
                     </div>
 
@@ -201,7 +201,7 @@ export default function AdminSettingsPage() {
                         onChange={handleStoreChange}
                         min="0"
                         max="100"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
                   </div>
@@ -224,7 +224,7 @@ export default function AdminSettingsPage() {
                         value={shippingSettings.freeShippingThreshold}
                         onChange={handleShippingChange}
                         min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                       <p className="text-xs text-gray-500 mt-1">Orders above this amount get free shipping</p>
                     </div>
@@ -239,7 +239,7 @@ export default function AdminSettingsPage() {
                         value={shippingSettings.standardShippingRate}
                         onChange={handleShippingChange}
                         min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
 
@@ -253,7 +253,7 @@ export default function AdminSettingsPage() {
                         value={shippingSettings.expressShippingRate}
                         onChange={handleShippingChange}
                         min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
 
@@ -266,7 +266,7 @@ export default function AdminSettingsPage() {
                         name="estimatedDelivery"
                         value={shippingSettings.estimatedDelivery}
                         onChange={handleShippingChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
                   </div>
@@ -299,7 +299,7 @@ export default function AdminSettingsPage() {
                             onChange={handlePaymentChange}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                         </label>
                       </div>
                       
@@ -313,7 +313,7 @@ export default function AdminSettingsPage() {
                             name="razorpayKeyId"
                             value={paymentSettings.razorpayKeyId}
                             onChange={handlePaymentChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                           />
                           <p className="text-xs text-gray-500 mt-1">Configure in .env.local for security</p>
                         </div>
@@ -342,7 +342,7 @@ export default function AdminSettingsPage() {
                             onChange={handlePaymentChange}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                         </label>
                       </div>
                       
@@ -357,7 +357,7 @@ export default function AdminSettingsPage() {
                             value={paymentSettings.codLimit}
                             onChange={handlePaymentChange}
                             min="0"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                           />
                           <p className="text-xs text-gray-500 mt-1">Orders above this amount must pay online</p>
                         </div>
@@ -374,15 +374,15 @@ export default function AdminSettingsPage() {
                   
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                        <span className="text-purple-600 font-bold text-2xl">
+                      <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                        <span className="text-red-600 font-bold text-2xl">
                           {admin?.name?.charAt(0) || "A"}
                         </span>
                       </div>
                       <div>
                         <h4 className="font-medium text-gray-900">{admin?.name || "Admin User"}</h4>
                         <p className="text-sm text-gray-500">{admin?.email}</p>
-                        <span className="inline-block mt-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
+                        <span className="inline-block mt-1 px-2 py-1 bg-red-100 text-red-700 text-xs rounded">
                           Administrator
                         </span>
                       </div>
@@ -436,7 +436,7 @@ export default function AdminSettingsPage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-purple-400"
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400"
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
@@ -448,3 +448,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+

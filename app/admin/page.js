@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     );
   }
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
         </svg>
       ),
-      color: "bg-purple-500"
+      color: "bg-red-500"
     }
   ];
 
@@ -141,8 +141,8 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl shadow-sm">
             <div className="p-6 border-b flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-              <a href="/admin/orders" className="text-purple-600 hover:text-purple-700 text-sm font-medium">
-                View All →
+              <a href="/admin/orders" className="text-red-600 hover:text-red-700 text-sm font-medium">
+                View All â†’
               </a>
             </div>
             
@@ -200,3 +200,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

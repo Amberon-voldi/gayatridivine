@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -88,9 +88,9 @@ export default function AddressesPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
-        <Link href="/account" className="text-gray-500 hover:text-purple-600">Account</Link>
+        <Link href="/account" className="text-gray-500 hover:text-red-600">Account</Link>
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">Addresses</span>
       </nav>
@@ -99,7 +99,7 @@ export default function AddressesPage() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Addresses</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+          className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
         >
           {showForm ? "Cancel" : "Add Address"}
         </button>
@@ -119,7 +119,7 @@ export default function AddressesPage() {
                   value={formData.fullName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div>
@@ -130,7 +130,7 @@ export default function AddressesPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function AddressesPage() {
                 onChange={handleChange}
                 required
                 rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
             <div>
@@ -152,7 +152,7 @@ export default function AddressesPage() {
                 name="addressLine2"
                 value={formData.addressLine2}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -164,7 +164,7 @@ export default function AddressesPage() {
                   value={formData.city}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div>
@@ -175,7 +175,7 @@ export default function AddressesPage() {
                   value={formData.state}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div>
@@ -186,7 +186,7 @@ export default function AddressesPage() {
                   value={formData.pincode}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
             </div>
@@ -196,13 +196,13 @@ export default function AddressesPage() {
                 name="isDefault"
                 checked={formData.isDefault}
                 onChange={handleChange}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                className="rounded border-gray-300 text-red-600 focus:ring-red-500"
               />
               <span className="ml-2 text-sm text-gray-600">Set as default address</span>
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+              className="w-full sm:w-auto px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
             >
               Save Address
             </button>
@@ -216,7 +216,7 @@ export default function AddressesPage() {
           {addresses.map(address => (
             <div key={address.$id} className="bg-white rounded-xl shadow-sm p-6 relative">
               {address.isDefault && (
-                <span className="absolute top-4 right-4 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                <span className="absolute top-4 right-4 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
                   Default
                 </span>
               )}
@@ -228,7 +228,7 @@ export default function AddressesPage() {
                 {address.city}, {address.state} - {address.pincode}
               </p>
               <div className="mt-4 pt-4 border-t flex gap-4">
-                <button className="text-sm text-purple-600 hover:text-purple-700">Edit</button>
+                <button className="text-sm text-red-600 hover:text-red-700">Edit</button>
                 <button
                   onClick={() => handleDelete(address.$id)}
                   className="text-sm text-red-600 hover:text-red-700"
@@ -249,7 +249,7 @@ export default function AddressesPage() {
           <p className="text-gray-600 mb-4">Add an address for faster checkout</p>
           <button
             onClick={() => setShowForm(true)}
-            className="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
           >
             Add Address
           </button>
@@ -258,3 +258,4 @@ export default function AddressesPage() {
     </div>
   );
 }
+

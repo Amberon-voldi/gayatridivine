@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
@@ -30,7 +30,7 @@ export default function CartPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">Shopping Cart</span>
       </nav>
@@ -46,7 +46,7 @@ export default function CartPage() {
           <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet.</p>
           <Link
             href="/"
-            className="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
           >
             Continue Shopping
           </Link>
@@ -103,7 +103,7 @@ export default function CartPage() {
 
               <Link
                 href="/checkout"
-                className="w-full block text-center py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                className="w-full block text-center py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
               >
                 Proceed to Checkout
               </Link>
@@ -133,3 +133,4 @@ export default function CartPage() {
     </div>
   );
 }
+

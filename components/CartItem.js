@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
@@ -20,7 +20,7 @@ export default function CartItem({ item }) {
       {/* Details */}
       <div className="flex-1 min-w-0">
         <Link href={`/product/${item.id}`}>
-          <h3 className="text-sm sm:text-base font-medium text-gray-800 hover:text-purple-600 transition-colors truncate">
+          <h3 className="text-sm sm:text-base font-medium text-gray-800 hover:text-red-600 transition-colors truncate">
             {item.name}
           </h3>
         </Link>
@@ -83,3 +83,4 @@ export default function CartItem({ item }) {
     </div>
   );
 }
+

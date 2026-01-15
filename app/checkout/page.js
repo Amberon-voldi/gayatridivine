@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -18,6 +18,16 @@ export default function CheckoutPage() {
   const [orderDetails, setOrderDetails] = useState(null);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
+  const [phoneVerification, setPhoneVerification] = useState({
+    verified: false,
+    reqId: null,
+    otp: "",
+    sending: false,
+    verifying: false,
+    message: "",
+    error: "",
+  });
+
   const [formData, setFormData] = useState({
     email: user?.email || "",
     phone: user?.phone || "",
@@ -30,8 +40,142 @@ export default function CheckoutPage() {
     paymentMethod: "razorpay"
   });
 
+  const normalizePhoneForMsg91 = (phone) => {
+    const raw = String(phone || "").trim();
+    if (!raw) return "";
+
+    // Preserve a leading '+' if user entered it (e.g. +91XXXXXXXXXX)
+    const hasPlus = raw.startsWith("+");
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return "";
+
+    return hasPlus ? `+${digits}` : digits;
+  };
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    if (name === "phone") {
+      setPhoneVerification((prev) => ({
+        ...prev,
+        verified: false,
+        reqId: null,
+        otp: "",
+        message: "",
+        error: "",
+      }));
+    }
+  };
+
+  const sendPhoneOtp = async () => {
+    const identifier = normalizePhoneForMsg91(formData.phone);
+    if (!identifier) {
+      setPhoneVerification((prev) => ({ ...prev, error: "Enter a valid phone number" }));
+      return;
+    }
+
+    try {
+      setPhoneVerification((prev) => ({
+        ...prev,
+        sending: true,
+        error: "",
+        message: "Sending OTP...",
+      }));
+
+      const res = await fetch("/api/msg91/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier }),
+      });
+
+      const json = await res.json();
+      if (!json?.success) {
+        throw new Error(
+          json?.error || json?.data?.message || json?.data?.msg || "Failed to send OTP"
+        );
+      }
+
+      const reqId =
+        json?.reqId ||
+        json?.data?.reqId ||
+        json?.data?.reqID ||
+        json?.data?.requestId ||
+        json?.data?.requestID ||
+        json?.data?.data?.reqId ||
+        json?.data?.data?.reqID ||
+        null;
+
+      if (!reqId) {
+        throw new Error("MSG91 did not return reqId. Please try again.");
+      }
+
+      setPhoneVerification((prev) => ({
+        ...prev,
+        reqId,
+        sending: false,
+        message: "OTP sent. Please enter the OTP.",
+        error: "",
+      }));
+    } catch (err) {
+      const message = err?.message || "Failed to send OTP";
+      setPhoneVerification((prev) => ({
+        ...prev,
+        sending: false,
+        message: "",
+        error: /captcha/i.test(message)
+          ? "OTP widget requires captcha. Disable captcha in MSG91 widget settings or implement captcha token passing."
+          : message,
+      }));
+    }
+  };
+
+  const verifyPhoneOtp = async () => {
+    if (!phoneVerification.reqId) {
+      setPhoneVerification((prev) => ({ ...prev, error: "Please send OTP first" }));
+      return;
+    }
+
+    const otp = String(phoneVerification.otp || "").trim();
+    if (!otp) {
+      setPhoneVerification((prev) => ({ ...prev, error: "Enter the OTP" }));
+      return;
+    }
+
+    try {
+      setPhoneVerification((prev) => ({
+        ...prev,
+        verifying: true,
+        error: "",
+        message: "Verifying OTP...",
+      }));
+
+      const res = await fetch("/api/msg91/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reqId: phoneVerification.reqId, otp }),
+      });
+
+      const json = await res.json();
+      if (!json?.success) {
+        throw new Error(json?.data?.message || json?.error || "OTP verification failed");
+      }
+
+      setPhoneVerification((prev) => ({
+        ...prev,
+        verified: true,
+        verifying: false,
+        message: "Phone number verified.",
+        error: "",
+      }));
+    } catch (err) {
+      setPhoneVerification((prev) => ({
+        ...prev,
+        verifying: false,
+        message: "",
+        error: err?.message || "OTP verification failed",
+      }));
+    }
   };
 
   const subtotal = getCartTotal();
@@ -110,7 +254,7 @@ export default function CheckoutPage() {
           address: `${formData.address}, ${formData.city}, ${formData.state} - ${formData.pincode}`
         },
         theme: {
-          color: "#9333ea"
+          color: "#dc2626"
         },
         modal: {
           ondismiss: function () {
@@ -177,6 +321,15 @@ export default function CheckoutPage() {
     e.preventDefault();
     
     if (step < 3) {
+      if (step === 2 && !phoneVerification.verified) {
+        setPhoneVerification((prev) => ({
+          ...prev,
+          error: "Please verify your phone number before payment.",
+        }));
+        setStep(1);
+        return;
+      }
+
       setStep(step + 1);
       return;
     }
@@ -211,7 +364,7 @@ export default function CheckoutPage() {
         <p className="text-gray-600 mb-6">Add some items to your cart before checkout.</p>
         <Link
           href="/"
-          className="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+          className="inline-flex items-center px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
         >
           Continue Shopping
         </Link>
@@ -240,14 +393,14 @@ export default function CheckoutPage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/"
-            className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
           >
             Continue Shopping
           </Link>
           {isAuthenticated && (
             <Link
               href="/account/orders"
-              className="px-6 py-3 border border-purple-600 text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-colors"
+              className="px-6 py-3 border border-red-600 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors"
             >
               View Orders
             </Link>
@@ -266,9 +419,9 @@ export default function CheckoutPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm mb-8">
-          <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+          <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
           <span className="text-gray-400">/</span>
-          <Link href="/cart" className="text-gray-500 hover:text-purple-600">Cart</Link>
+          <Link href="/cart" className="text-gray-500 hover:text-red-600">Cart</Link>
           <span className="text-gray-400">/</span>
           <span className="text-gray-900">Checkout</span>
         </nav>
@@ -282,7 +435,7 @@ export default function CheckoutPage() {
           ].map((s, index) => (
             <div key={s.num} className="flex items-center">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
-                step >= s.num ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-600"
+                step >= s.num ? "bg-red-600 text-white" : "bg-gray-200 text-gray-600"
               }`}>
                 {step > s.num ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +447,7 @@ export default function CheckoutPage() {
                 {s.label}
               </span>
               {index < 2 && (
-                <div className={`w-12 sm:w-24 h-1 mx-3 rounded ${step > s.num ? "bg-purple-600" : "bg-gray-200"}`} />
+                <div className={`w-12 sm:w-24 h-1 mx-3 rounded ${step > s.num ? "bg-red-600" : "bg-gray-200"}`} />
               )}
             </div>
           ))}
@@ -312,7 +465,7 @@ export default function CheckoutPage() {
                   {!isAuthenticated && (
                     <p className="text-sm text-gray-600 mb-6">
                       Already have an account?{" "}
-                      <Link href="/login?redirect=/checkout" className="text-purple-600 hover:text-purple-700">
+                      <Link href="/login?redirect=/checkout" className="text-red-600 hover:text-red-700">
                         Login
                       </Link>
                     </p>
@@ -327,7 +480,7 @@ export default function CheckoutPage() {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
                     <div>
@@ -338,14 +491,76 @@ export default function CheckoutPage() {
                         value={formData.phone}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
+
+                      <div className="mt-3 rounded-lg border border-gray-200 p-4 bg-gray-50">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Verify phone via OTP</p>
+                            <p className="text-xs text-gray-600">
+                              Required before payment.
+                            </p>
+                          </div>
+
+                          {phoneVerification.verified ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
+                              Verified
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={sendPhoneOtp}
+                              disabled={phoneVerification.sending || !formData.phone}
+                              className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
+                            >
+                              {phoneVerification.sending ? "Sending..." : "Send OTP"}
+                            </button>
+                          )}
+                        </div>
+
+                        {!phoneVerification.verified && phoneVerification.reqId && (
+                          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={phoneVerification.otp}
+                                onChange={(e) =>
+                                  setPhoneVerification((prev) => ({
+                                    ...prev,
+                                    otp: e.target.value,
+                                    error: "",
+                                  }))
+                                }
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={verifyPhoneOtp}
+                              disabled={phoneVerification.verifying}
+                              className="sm:col-span-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
+                            >
+                              {phoneVerification.verifying ? "Verifying..." : "Verify OTP"}
+                            </button>
+                          </div>
+                        )}
+
+                        {phoneVerification.message && (
+                          <p className="mt-3 text-xs text-gray-700">{phoneVerification.message}</p>
+                        )}
+                        {phoneVerification.error && (
+                          <p className="mt-3 text-xs text-red-700">{phoneVerification.error}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="mt-6 w-full py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                    className="mt-6 w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Continue to Shipping
                   </button>
@@ -367,7 +582,7 @@ export default function CheckoutPage() {
                           value={formData.firstName}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                       </div>
                       <div>
@@ -378,7 +593,7 @@ export default function CheckoutPage() {
                           value={formData.lastName}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                       </div>
                     </div>
@@ -390,7 +605,7 @@ export default function CheckoutPage() {
                         onChange={handleChange}
                         required
                         rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-4">
@@ -402,7 +617,7 @@ export default function CheckoutPage() {
                           value={formData.city}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                       </div>
                       <div>
@@ -413,7 +628,7 @@ export default function CheckoutPage() {
                           value={formData.state}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                       </div>
                       <div>
@@ -424,7 +639,7 @@ export default function CheckoutPage() {
                           value={formData.pincode}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                       </div>
                     </div>
@@ -440,7 +655,7 @@ export default function CheckoutPage() {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                      className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
                     >
                       Continue to Payment
                     </button>
@@ -456,7 +671,7 @@ export default function CheckoutPage() {
                   <div className="space-y-4">
                     {/* Razorpay - Online Payment */}
                     <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                      formData.paymentMethod === "razorpay" ? "border-purple-600 bg-purple-50" : "border-gray-300"
+                      formData.paymentMethod === "razorpay" ? "border-red-600 bg-red-50" : "border-gray-300"
                     }`}>
                       <input
                         type="radio"
@@ -464,7 +679,7 @@ export default function CheckoutPage() {
                         value="razorpay"
                         checked={formData.paymentMethod === "razorpay"}
                         onChange={handleChange}
-                        className="text-purple-600 focus:ring-purple-500"
+                        className="text-red-600 focus:ring-red-500"
                       />
                       <span className="ml-3 flex-1">
                         <span className="block font-medium text-gray-900">Pay Online</span>
@@ -491,7 +706,7 @@ export default function CheckoutPage() {
 
                     {/* COD */}
                     <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                      formData.paymentMethod === "cod" ? "border-purple-600 bg-purple-50" : "border-gray-300"
+                      formData.paymentMethod === "cod" ? "border-red-600 bg-red-50" : "border-gray-300"
                     }`}>
                       <input
                         type="radio"
@@ -499,7 +714,7 @@ export default function CheckoutPage() {
                         value="cod"
                         checked={formData.paymentMethod === "cod"}
                         onChange={handleChange}
-                        className="text-purple-600 focus:ring-purple-500"
+                        className="text-red-600 focus:ring-red-500"
                       />
                       <span className="ml-3">
                         <span className="block font-medium text-gray-900">Cash on Delivery</span>
@@ -519,7 +734,7 @@ export default function CheckoutPage() {
                     <button
                       type="submit"
                       disabled={isProcessing}
-                      className="flex-1 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed flex items-center justify-center"
+                      className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                       {isProcessing ? (
                         <span className="flex items-center">
@@ -589,3 +804,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 export default function FAQPage() {
   const faqs = [
@@ -113,7 +113,7 @@ export default function FAQPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">FAQ</span>
       </nav>
@@ -129,7 +129,7 @@ export default function FAQPage() {
           <a
             key={section.category}
             href={`#${section.category.toLowerCase().replace(/\s+/g, '-')}`}
-            className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700 hover:bg-purple-100 hover:text-purple-700 transition-colors shadow-sm"
+            className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700 hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm"
           >
             {section.category}
           </a>
@@ -141,8 +141,8 @@ export default function FAQPage() {
         {faqs.map(section => (
           <section key={section.category} id={section.category.toLowerCase().replace(/\s+/g, '-')}>
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -168,11 +168,11 @@ export default function FAQPage() {
       </div>
 
       {/* Still Need Help */}
-      <div className="mt-16 bg-gradient-to-r from-purple-600 to-pink-500 rounded-2xl p-8 text-center text-white">
+      <div className="mt-16 bg-gradient-to-r from-red-600 to-pink-500 rounded-2xl p-8 text-center text-white">
         <h2 className="text-2xl font-bold mb-4">Still have questions?</h2>
         <p className="mb-6 opacity-90">Our support team is ready to help you</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/contact" className="px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+          <Link href="/contact" className="px-6 py-3 bg-white text-red-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
             Contact Support
           </Link>
           <a href="tel:+919876543210" className="px-6 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors">
@@ -183,3 +183,4 @@ export default function FAQPage() {
     </div>
   );
 }
+

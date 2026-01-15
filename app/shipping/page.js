@@ -1,11 +1,11 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 export default function ShippingPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">Shipping Information</span>
       </nav>
@@ -73,19 +73,19 @@ export default function ShippingPage() {
           </p>
           <ol className="mt-4 space-y-3">
             <li className="flex items-start space-x-3">
-              <span className="flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-600 rounded-full text-sm font-semibold shrink-0">1</span>
+              <span className="flex items-center justify-center w-6 h-6 bg-red-100 text-red-600 rounded-full text-sm font-semibold shrink-0">1</span>
               <span className="text-gray-600">Order confirmed - We've received your order</span>
             </li>
             <li className="flex items-start space-x-3">
-              <span className="flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-600 rounded-full text-sm font-semibold shrink-0">2</span>
+              <span className="flex items-center justify-center w-6 h-6 bg-red-100 text-red-600 rounded-full text-sm font-semibold shrink-0">2</span>
               <span className="text-gray-600">Processing - Your order is being prepared</span>
             </li>
             <li className="flex items-start space-x-3">
-              <span className="flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-600 rounded-full text-sm font-semibold shrink-0">3</span>
+              <span className="flex items-center justify-center w-6 h-6 bg-red-100 text-red-600 rounded-full text-sm font-semibold shrink-0">3</span>
               <span className="text-gray-600">Shipped - Your package is on its way</span>
             </li>
             <li className="flex items-start space-x-3">
-              <span className="flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-600 rounded-full text-sm font-semibold shrink-0">4</span>
+              <span className="flex items-center justify-center w-6 h-6 bg-red-100 text-red-600 rounded-full text-sm font-semibold shrink-0">4</span>
               <span className="text-gray-600">Delivered - Enjoy your purchase!</span>
             </li>
           </ol>
@@ -96,19 +96,19 @@ export default function ShippingPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Important Notes</h2>
           <ul className="space-y-2 text-gray-600">
             <li className="flex items-start space-x-2">
-              <span className="text-purple-600">•</span>
+              <span className="text-red-600">â€¢</span>
               <span>Delivery times may vary during sale periods and festivals</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-purple-600">•</span>
+              <span className="text-red-600">â€¢</span>
               <span>Someone must be available to receive the package at the delivery address</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-purple-600">•</span>
+              <span className="text-red-600">â€¢</span>
               <span>For COD orders, please keep the exact amount ready</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-purple-600">•</span>
+              <span className="text-red-600">â€¢</span>
               <span>Contact our support team for any delivery-related queries</span>
             </li>
           </ul>
@@ -117,3 +117,4 @@ export default function ShippingPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -89,7 +89,7 @@ export default function AdminSidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
-                      ? "bg-purple-100 text-purple-700"
+                      ? "bg-red-100 text-red-700"
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
@@ -104,8 +104,8 @@ export default function AdminSidebar() {
 
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-            <span className="text-purple-600 font-semibold">
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <span className="text-red-600 font-semibold">
               {admin?.name?.charAt(0) || "A"}
             </span>
           </div>
@@ -129,3 +129,4 @@ export default function AdminSidebar() {
     </aside>
   );
 }
+

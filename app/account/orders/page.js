@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -47,9 +47,9 @@ export default function OrdersPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
-        <Link href="/account" className="text-gray-500 hover:text-purple-600">Account</Link>
+        <Link href="/account" className="text-gray-500 hover:text-red-600">Account</Link>
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">Orders</span>
       </nav>
@@ -101,7 +101,7 @@ export default function OrdersPage() {
                         className="w-20 h-20 object-cover rounded-lg"
                       />
                       <div className="flex-1">
-                        <Link href={`/product/${item.id}`} className="font-medium text-gray-900 hover:text-purple-600">
+                        <Link href={`/product/${item.id}`} className="font-medium text-gray-900 hover:text-red-600">
                           {item.name}
                         </Link>
                         {item.selectedColor && (
@@ -193,7 +193,7 @@ export default function OrdersPage() {
           <p className="text-gray-600 mb-6">When you place orders, they will appear here.</p>
           <Link
             href="/"
-            className="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
           >
             Start Shopping
           </Link>
@@ -202,3 +202,4 @@ export default function OrdersPage() {
     </div>
   );
 }
+

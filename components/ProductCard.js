@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -45,7 +45,7 @@ export default function ProductCard({ product }) {
             onClick={handleAddToCart}
             disabled={!product.inStock && !inCart}
             className={`absolute bottom-3 right-3 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed ${
-              inCart ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'
+              inCart ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
             }`}
             aria-label={inCart ? "View cart" : "Add to cart"}
             title={inCart ? "View Cart" : "Add to Cart"}
@@ -64,10 +64,10 @@ export default function ProductCard({ product }) {
 
         {/* Content */}
         <div className="p-4 flex-1 flex flex-col">
-          <span className="text-xs text-purple-600 font-medium uppercase tracking-wide">
+          <span className="text-xs text-red-600 font-medium uppercase tracking-wide">
             {product.category}
           </span>
-          <h3 className="text-gray-800 font-medium mt-1 group-hover:text-purple-600 transition-colors line-clamp-2">
+          <h3 className="text-gray-800 font-medium mt-1 group-hover:text-red-600 transition-colors line-clamp-2">
             {product.name}
           </h3>
           
@@ -104,3 +104,4 @@ export default function ProductCard({ product }) {
     </Link>
   );
 }
+

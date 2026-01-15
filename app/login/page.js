@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
@@ -55,7 +55,7 @@ function LoginContent() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-pink-500 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-xl">G</span>
             </div>
           </Link>
@@ -79,7 +79,7 @@ function LoginContent() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 placeholder="your@email.com"
               />
             </div>
@@ -91,23 +91,23 @@ function LoginContent() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="••••••••"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               />
             </div>
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                <input type="checkbox" className="rounded border-gray-300 text-red-600 focus:ring-red-500" />
                 <span className="ml-2 text-gray-600">Remember me</span>
               </label>
-              <a href="#" className="text-purple-600 hover:text-purple-700">Forgot password?</a>
+              <a href="#" className="text-red-600 hover:text-red-700">Forgot password?</a>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </button>
@@ -115,7 +115,7 @@ function LoginContent() {
 
           <div className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{" "}
-            <Link href={`/register${redirect !== "/" ? `?redirect=${redirect}` : ""}`} className="text-purple-600 hover:text-purple-700 font-medium">
+            <Link href={`/register${redirect !== "/" ? `?redirect=${redirect}` : ""}`} className="text-red-600 hover:text-red-700 font-medium">
               Create one
             </Link>
           </div>
@@ -140,3 +140,4 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+

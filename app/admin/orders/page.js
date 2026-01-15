@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import { Query } from "appwrite";
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-700",
   processing: "bg-blue-100 text-blue-700",
-  shipped: "bg-purple-100 text-purple-700",
+  shipped: "bg-red-100 text-red-700",
   delivered: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700"
 };
@@ -72,7 +72,7 @@ export default function AdminOrdersPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function AdminOrdersPage() {
                 placeholder="Search by order ID, name, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <svg
                 className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
@@ -129,7 +129,7 @@ export default function AdminOrdersPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -144,7 +144,7 @@ export default function AdminOrdersPage() {
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             {loadingOrders ? (
               <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -167,7 +167,7 @@ export default function AdminOrdersPage() {
                         <td className="px-6 py-4">
                           <Link
                             href={`/admin/orders/${order.$id}`}
-                            className="text-purple-600 hover:text-purple-700 font-medium"
+                            className="text-red-600 hover:text-red-700 font-medium"
                           >
                             #{order.$id.substring(0, 8)}
                           </Link>
@@ -215,7 +215,7 @@ export default function AdminOrdersPage() {
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               href={`/admin/orders/${order.$id}`}
-                              className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="View Details"
                             >
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,3 +256,4 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
+
