@@ -7,6 +7,7 @@ import { useAdmin } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { deleteProduct, listAllProducts } from "@/lib/products";
+import { deriveCategoriesFromProducts, listCategories } from "@/lib/categories";
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -15,7 +16,8 @@ export default function AdminProductsPage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categories, setCategories] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -39,6 +41,13 @@ export default function AdminProductsPage() {
       setProductsError("");
       const items = await listAllProducts();
       setProducts(items);
+
+      try {
+        const cats = await listCategories({ onlyActive: true });
+        setCategories(cats);
+      } catch {
+        setCategories(deriveCategoriesFromProducts(items));
+      }
     } catch (e) {
       console.error("Failed to load admin products:", e);
       setProductsError(e?.message || "Failed to load products");
@@ -59,11 +68,10 @@ export default function AdminProductsPage() {
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    const matchesCategory =
+      selectedCategory === "all" || String(product.category || "") === String(selectedCategory);
     return matchesSearch && matchesCategory;
   });
-
-  const categories = [...new Set(products.map((p) => p.category))];
 
   const handleDeleteClick = (product) => {
     setProductToDelete(product);
@@ -114,16 +122,16 @@ export default function AdminProductsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              
+
               <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full sm:w-56 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="all">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat} className="capitalize">
-                    {cat}
+                <option value="all">All categories</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.slug || c.id}>
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -185,9 +193,7 @@ export default function AdminProductsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm capitalize">
-                          {product.category}
-                        </span>
+                        <span className="text-sm text-gray-700">{product.category || "-"}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div>

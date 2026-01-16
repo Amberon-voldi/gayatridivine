@@ -6,16 +6,18 @@ import { useAdmin } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { createProduct } from "@/lib/products";
+import { listCategories } from "@/lib/categories";
 
 export default function NewProductPage() {
   const router = useRouter();
   const { isAdmin, isLoading, admin } = useAdmin();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    category: "purse",
+    category: "product",
     price: "",
     originalPrice: "",
     image: "",
@@ -32,6 +34,24 @@ export default function NewProductPage() {
       router.push("/admin/login");
     }
   }, [isAdmin, isLoading, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const cats = await listCategories({ onlyActive: true });
+        if (!cancelled) setCategories(cats);
+      } catch {
+        if (!cancelled) setCategories([]);
+      }
+    };
+
+    if (!isLoading && isAdmin) load();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, isLoading]);
 
   if (isLoading || !isAdmin) {
     return (
@@ -134,21 +154,30 @@ export default function NewProductPage() {
                     />
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Category *
                     </label>
-                    <select
+                    <input
+                      type="text"
                       name="category"
                       value={formData.category}
                       onChange={handleChange}
                       required
+                      list="categoryOptions"
+                      placeholder="e.g. purse, wallet"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                    >
-                      <option value="purse">Purse</option>
-                      <option value="wallet">Wallet</option>
-                      <option value="clutch">Clutch</option>
-                    </select>
+                    />
+                    <datalist id="categoryOptions">
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.slug || c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </datalist>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Use a category slug (recommended). You can type a new one.
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-4 pt-6">

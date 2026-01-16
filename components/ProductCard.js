@@ -19,7 +19,9 @@ export default function ProductCard({ product }) {
     }
   };
 
-  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  const discount = product.originalPrice
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : 0;
 
   return (
     <Link href={`/product/${product.id}`} className="group">
@@ -64,12 +66,13 @@ export default function ProductCard({ product }) {
 
         {/* Content */}
         <div className="p-4 flex-1 flex flex-col">
-          <span className="text-xs text-red-600 font-medium uppercase tracking-wide">
-            {product.category}
-          </span>
           <h3 className="text-gray-800 font-medium mt-1 group-hover:text-red-600 transition-colors line-clamp-2">
             {product.name}
           </h3>
+
+          {product.category && (
+            <p className="text-xs text-gray-500 mt-1">{product.category}</p>
+          )}
           
           {/* Rating */}
           <div className="flex items-center mt-2">

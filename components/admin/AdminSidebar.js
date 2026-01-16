@@ -24,6 +24,15 @@ const menuItems = [
     )
   },
   {
+    name: "Categories",
+    href: "/admin/categories",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 17h.01M17 7h.01M17 17h.01M3 7a4 4 0 014-4h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7z" />
+      </svg>
+    )
+  },
+  {
     name: "Orders",
     href: "/admin/orders",
     icon: (

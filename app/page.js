@@ -4,13 +4,15 @@ import { useEffect, useMemo, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { listAllProducts } from "@/lib/products";
+import { deriveCategoriesFromProducts, listCategories } from "@/lib/categories";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
-  const categoryParam = searchParams.get("category") || "all";
   const searchQuery = searchParams.get("search") || "";
+  const categoryParam = searchParams.get("category") || "all";
 
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -22,7 +24,17 @@ function ProductsContent() {
         setLoading(true);
         setError("");
         const items = await listAllProducts();
-        if (!cancelled) setProducts(items);
+
+        if (cancelled) return;
+        setProducts(items);
+
+        try {
+          const cats = await listCategories({ onlyActive: true });
+          if (!cancelled) setCategories(cats);
+        } catch (e) {
+          // If the categories collection isn't set up yet, derive from product.category values.
+          if (!cancelled) setCategories(deriveCategoriesFromProducts(items));
+        }
       } catch (e) {
         console.error("Failed to load products:", e);
         if (!cancelled) setError(e?.message || "Failed to load products");
@@ -42,8 +54,8 @@ function ProductsContent() {
     let result = [...products];
 
     // Filter by category
-    if (categoryParam !== "all") {
-      result = result.filter(p => p.category === categoryParam);
+    if (categoryParam && categoryParam !== "all") {
+      result = result.filter((p) => String(p.category || "") === String(categoryParam));
     }
 
     // Filter by search query
@@ -52,12 +64,42 @@ function ProductsContent() {
       result = result.filter(p =>
         p.name.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query) ||
-        p.category.toLowerCase().includes(query)
+        String(p.category || "").toLowerCase().includes(query)
       );
     }
 
     return result;
-  }, [categoryParam, searchQuery]);
+  }, [searchQuery, categoryParam, products]);
+
+  const categoryLinks = useMemo(() => {
+    const unique = new Map();
+
+    // Always include all
+    unique.set("all", { id: "all", name: "All" });
+
+    for (const c of categories || []) {
+      const id = String(c?.id || c?.slug || c?.name || "").trim();
+      if (!id || id === "all") continue;
+      const label = String(c?.name || id).trim();
+      unique.set(id, { id, name: label });
+    }
+
+    // If categories come from Appwrite docs, id is doc.$id; but our product.category is a string.
+    // For best compatibility, prefer showing/using the raw category value used in products.
+    // When deriveCategoriesFromProducts is used, id == product.category.
+    return Array.from(unique.values());
+  }, [categories]);
+
+  const buildCategoryHref = (categoryId) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!categoryId || categoryId === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", categoryId);
+    }
+    const qs = params.toString();
+    return qs ? `/?${qs}` : "/";
+  };
 
   if (loading) {
     return (
@@ -87,6 +129,28 @@ function ProductsContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Categories */}
+      {categoryLinks.length > 1 && (
+        <div className="mb-6 flex flex-wrap gap-2">
+          {categoryLinks.map((c) => {
+            const active = (categoryParam || "all") === c.id;
+            return (
+              <a
+                key={c.id}
+                href={buildCategoryHref(c.id)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                  active
+                    ? "bg-red-600 text-white border-red-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-red-300 hover:text-red-700"
+                }`}
+              >
+                {c.name}
+              </a>
+            );
+          })}
+        </div>
+      )}
+
       {/* Products Grid */}
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">

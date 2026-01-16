@@ -16,7 +16,7 @@ export default function Footer() {
               <span className="text-xl font-semibold">Gayatari Divine Stores</span>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
-              Discover our curated collection of premium purses and wallets. 
+              Discover our curated collection of premium products.
               Quality craftsmanship meets timeless elegance at Gayatari Divine Stores.
             </p>
             <div className="flex space-x-4">
@@ -45,16 +45,6 @@ export default function Footer() {
               <li>
                 <Link href="/" className="text-gray-400 hover:text-white transition-colors">
                   Shop All
-                </Link>
-              </li>
-              <li>
-                <Link href="/?category=purse" className="text-gray-400 hover:text-white transition-colors">
-                  Purses
-                </Link>
-              </li>
-              <li>
-                <Link href="/?category=wallet" className="text-gray-400 hover:text-white transition-colors">
-                  Wallets
                 </Link>
               </li>
               <li>

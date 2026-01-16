@@ -40,18 +40,15 @@ export default function ProductPage({ params }) {
 
         // Related products
         if (p?.category) {
-          const { products: sameCategory } = await listProducts({
-            category: p.category,
-            limit: 12,
-            offset: 0,
-          });
+          const { products: related } = await listProducts({ limit: 24, offset: 0, category: p.category });
           if (!cancelled) {
-            setRelatedProducts(
-              sameCategory.filter((x) => x.id !== p.id).slice(0, 4)
-            );
+            setRelatedProducts(related.filter((x) => x.id !== p.id).slice(0, 4));
           }
         } else {
-          setRelatedProducts([]);
+          const { products: latest } = await listProducts({ limit: 12, offset: 0 });
+          if (!cancelled) {
+            setRelatedProducts(latest.filter((x) => x.id !== p.id).slice(0, 4));
+          }
         }
       } catch (e) {
         console.error("Failed to load product:", e);
@@ -112,10 +109,17 @@ export default function ProductPage({ params }) {
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
         <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
-        <span className="text-gray-400">/</span>
-        <Link href={`/?category=${product.category}`} className="text-gray-500 hover:text-red-600 capitalize">
-          {product.category}s
-        </Link>
+        {product.category && (
+          <>
+            <span className="text-gray-400">/</span>
+            <Link
+              href={`/?category=${encodeURIComponent(product.category)}`}
+              className="text-gray-500 hover:text-red-600"
+            >
+              {product.category}
+            </Link>
+          </>
+        )}
         <span className="text-gray-400">/</span>
         <span className="text-gray-900">{product.name}</span>
       </nav>
@@ -149,9 +153,6 @@ export default function ProductPage({ params }) {
 
         {/* Product Info */}
         <div>
-          <span className="text-sm text-red-600 font-medium uppercase tracking-wide">
-            {product.category}
-          </span>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">{product.name}</h1>
           
           {/* Rating */}

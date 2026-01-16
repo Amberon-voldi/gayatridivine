@@ -1,15 +1,35 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { listCategories } from "@/lib/categories";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
   const { getCartCount, isLoaded } = useCart();
   const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const cats = await listCategories({ onlyActive: true });
+        if (!cancelled) setCategories(cats);
+      } catch {
+        if (!cancelled) setCategories([]);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -97,7 +117,7 @@ export default function Header() {
               <input
                 type="text"
                 name="search"
-                placeholder="Search for purses, wallets..."
+                placeholder="Search products..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 autoFocus
               />
@@ -124,6 +144,17 @@ export default function Header() {
               >
                 All Products
               </Link>
+
+              {categories.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/?category=${encodeURIComponent(c.slug || c.id)}`}
+                  className="text-gray-600 hover:text-red-600 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {c.name}
+                </Link>
+              ))}
               <Link
                 href={isAuthenticated ? "/account" : "/login"}
                 className="text-gray-600 hover:text-red-600 transition-colors"

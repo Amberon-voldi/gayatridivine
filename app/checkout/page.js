@@ -321,10 +321,19 @@ export default function CheckoutPage() {
     e.preventDefault();
     
     if (step < 3) {
+      if (step === 1 && !phoneVerification.verified) {
+        setPhoneVerification((prev) => ({
+          ...prev,
+          error: "Please verify your phone number to continue.",
+        }));
+        return;
+      }
+
+      // Defensive: if state somehow advances without verification, send user back.
       if (step === 2 && !phoneVerification.verified) {
         setPhoneVerification((prev) => ({
           ...prev,
-          error: "Please verify your phone number before payment.",
+          error: "Please verify your phone number to continue.",
         }));
         setStep(1);
         return;
@@ -499,7 +508,7 @@ export default function CheckoutPage() {
                           <div>
                             <p className="text-sm font-medium text-gray-900">Verify phone via OTP</p>
                             <p className="text-xs text-gray-600">
-                              Required before payment.
+                              Required to continue.
                             </p>
                           </div>
 
@@ -560,10 +569,17 @@ export default function CheckoutPage() {
 
                   <button
                     type="submit"
-                    className="mt-6 w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                    disabled={!phoneVerification.verified}
+                    className="mt-6 w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
                   >
                     Continue to Shipping
                   </button>
+
+                  {!phoneVerification.verified && (
+                    <p className="mt-3 text-xs text-gray-600">
+                      Verify your phone number via OTP to continue.
+                    </p>
+                  )}
                 </div>
               )}
 
