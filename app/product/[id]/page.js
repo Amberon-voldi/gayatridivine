@@ -1,30 +1,94 @@
 "use client";
 
-import { useState, use } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { getProductById, products } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
+import { getProduct, listProducts } from "@/lib/products";
 
 export default function ProductPage({ params }) {
   const unwrappedParams = use(params);
-  const product = getProductById(unwrappedParams.id);
+  const productId = unwrappedParams.id;
   const { addToCart, isInCart } = useCart();
   const router = useRouter();
+
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loadError, setLoadError] = useState("");
+
   const inCart = product ? isInCart(product.id) : false;
   
-  const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || null);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setLoadError("");
+        const p = await getProduct(productId);
+        if (cancelled) return;
+        setProduct(p);
+        setSelectedColor(p?.colors?.[0] || null);
+        setSelectedImage(0);
+
+        // Related products
+        if (p?.category) {
+          const { products: sameCategory } = await listProducts({
+            category: p.category,
+            limit: 12,
+            offset: 0,
+          });
+          if (!cancelled) {
+            setRelatedProducts(
+              sameCategory.filter((x) => x.id !== p.id).slice(0, 4)
+            );
+          }
+        } else {
+          setRelatedProducts([]);
+        }
+      } catch (e) {
+        console.error("Failed to load product:", e);
+        if (!cancelled) setLoadError(e?.message || "Failed to load product");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    if (productId) load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  useEffect(() => {
+    if (!product) return;
+    setSelectedColor(product?.colors?.[0] || null);
+  }, [product]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-        <p className="text-gray-600 mb-8">The product you're looking for doesn't exist.</p>
-        <Link href="/" className="text-purple-600 hover:text-purple-700 font-medium">
+        <p className="text-gray-600 mb-8">
+          {loadError || "The product you're looking for doesn't exist."}
+        </p>
+        <Link href="/" className="text-red-600 hover:text-red-700 font-medium">
           ← Back to Shop
         </Link>
       </div>
@@ -43,18 +107,13 @@ export default function ProductPage({ params }) {
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
-  // Related products
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-2 text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-purple-600">Home</Link>
+        <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
         <span className="text-gray-400">/</span>
-        <Link href={`/?category=${product.category}`} className="text-gray-500 hover:text-purple-600 capitalize">
+        <Link href={`/?category=${product.category}`} className="text-gray-500 hover:text-red-600 capitalize">
           {product.category}s
         </Link>
         <span className="text-gray-400">/</span>
@@ -78,7 +137,7 @@ export default function ProductPage({ params }) {
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedImage === index ? "border-purple-600" : "border-transparent"
+                    selectedImage === index ? "border-red-600" : "border-transparent"
                   }`}
                 >
                   <img src={img} alt="" className="w-full h-full object-cover" />
@@ -90,7 +149,7 @@ export default function ProductPage({ params }) {
 
         {/* Product Info */}
         <div>
-          <span className="text-sm text-purple-600 font-medium uppercase tracking-wide">
+          <span className="text-sm text-red-600 font-medium uppercase tracking-wide">
             {product.category}
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">{product.name}</h1>
@@ -158,7 +217,7 @@ export default function ProductPage({ params }) {
                     onClick={() => setSelectedColor(color)}
                     className={`px-4 py-2 rounded-lg border text-sm transition-colors ${
                       selectedColor === color
-                        ? "border-purple-600 bg-purple-50 text-purple-600"
+                        ? "border-red-600 bg-red-50 text-red-600"
                         : "border-gray-300 text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -200,7 +259,7 @@ export default function ProductPage({ params }) {
                   : inCart
                   ? "bg-green-600 text-white hover:bg-green-700"
                   : product.inStock
-                  ? "bg-purple-600 text-white hover:bg-purple-700"
+                  ? "bg-red-600 text-white hover:bg-red-700"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
@@ -230,7 +289,7 @@ export default function ProductPage({ params }) {
             {!inCart && (
               <Link
                 href="/cart"
-                className="py-3 px-6 rounded-lg font-semibold border border-purple-600 text-purple-600 hover:bg-purple-50 transition-colors"
+                className="py-3 px-6 rounded-lg font-semibold border border-red-600 text-red-600 hover:bg-red-50 transition-colors"
               >
                 View Cart
               </Link>
@@ -240,19 +299,19 @@ export default function ProductPage({ params }) {
           {/* Trust Badges */}
           <div className="mt-8 grid grid-cols-3 gap-4 pt-8 border-t">
             <div className="text-center">
-              <svg className="w-8 h-8 mx-auto text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 mx-auto text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
               </svg>
               <p className="text-xs text-gray-600 mt-2">Free Shipping</p>
             </div>
             <div className="text-center">
-              <svg className="w-8 h-8 mx-auto text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 mx-auto text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-xs text-gray-600 mt-2">Quality Assured</p>
             </div>
             <div className="text-center">
-              <svg className="w-8 h-8 mx-auto text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 mx-auto text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <p className="text-xs text-gray-600 mt-2">Easy Returns</p>

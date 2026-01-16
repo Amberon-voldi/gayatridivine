@@ -125,20 +125,6 @@ export default function Header() {
                 All Products
               </Link>
               <Link
-                href="/?category=purse"
-                className="text-gray-600 hover:text-red-600 transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Purses
-              </Link>
-              <Link
-                href="/?category=wallet"
-                className="text-gray-600 hover:text-red-600 transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Wallets
-              </Link>
-              <Link
                 href={isAuthenticated ? "/account" : "/login"}
                 className="text-gray-600 hover:text-red-600 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}

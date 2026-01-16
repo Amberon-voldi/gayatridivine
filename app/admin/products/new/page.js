@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAdmin } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
+import { createProduct } from "@/lib/products";
 
 export default function NewProductPage() {
   const router = useRouter();
-  const { isAdmin, isLoading } = useAdmin();
+  const { isAdmin, isLoading, admin } = useAdmin();
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -72,12 +74,17 @@ export default function NewProductPage() {
     e.preventDefault();
     setSaving(true);
 
-    // In a real app, you would save to Appwrite here
-    // For now, we'll just simulate saving
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    alert("Product created successfully! (Note: In production, this would save to database)");
-    router.push("/admin/products");
+    try {
+      setError("");
+      await createProduct(formData, { ownerUserId: admin?.$id });
+      alert("Product created successfully!");
+      router.push("/admin/products");
+    } catch (err) {
+      console.error("Create product failed:", err);
+      setError(err?.message || "Failed to create product");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -90,6 +97,11 @@ export default function NewProductPage() {
         <div className="p-8">
           <form onSubmit={handleSubmit} className="max-w-4xl">
             <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+              {error && (
+                <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-red-700">
+                  {error}
+                </div>
+              )}
               {/* Basic Info */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>

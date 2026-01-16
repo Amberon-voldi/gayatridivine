@@ -6,7 +6,7 @@ import { useAdmin } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { databases, DATABASE_ID, COLLECTIONS, Query } from "@/lib/appwrite";
-import { products } from "@/data/products";
+import { listProducts } from "@/lib/products";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
     totalOrders: 0,
     pendingOrders: 0,
     totalRevenue: 0,
-    totalProducts: products.length
+    totalProducts: 0
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -40,6 +40,8 @@ export default function AdminDashboard() {
         [Query.orderDesc("$createdAt"), Query.limit(100)]
       );
 
+      const productsResponse = await listProducts({ limit: 1, offset: 0 });
+
       const orders = ordersResponse.documents;
       const pendingOrders = orders.filter(o => o.status === "pending" || o.status === "confirmed");
       const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -48,7 +50,7 @@ export default function AdminDashboard() {
         totalOrders: orders.length,
         pendingOrders: pendingOrders.length,
         totalRevenue,
-        totalProducts: products.length
+        totalProducts: productsResponse.total
       });
 
       setRecentOrders(orders.slice(0, 5));

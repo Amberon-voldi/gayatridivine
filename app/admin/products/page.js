@@ -6,22 +6,46 @@ import Link from "next/link";
 import { useAdmin } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { products as staticProducts } from "@/data/products";
+import { deleteProduct, listAllProducts } from "@/lib/products";
 
 export default function AdminProductsPage() {
   const router = useRouter();
   const { isAdmin, isLoading } = useAdmin();
-  const [products, setProducts] = useState(staticProducts);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
       router.push("/admin/login");
     }
   }, [isAdmin, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoading && isAdmin) {
+      loadProducts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, isLoading]);
+
+  const loadProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      setProductsError("");
+      const items = await listAllProducts();
+      setProducts(items);
+    } catch (e) {
+      console.error("Failed to load admin products:", e);
+      setProductsError(e?.message || "Failed to load products");
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -46,10 +70,20 @@ export default function AdminProductsPage() {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    setProducts(products.filter((p) => p.id !== productToDelete.id));
-    setShowDeleteModal(false);
-    setProductToDelete(null);
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    setDeleting(true);
+    try {
+      await deleteProduct(productToDelete.id);
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+    } catch (e) {
+      console.error("Failed to delete product:", e);
+      alert(e?.message || "Failed to delete product");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -108,6 +142,20 @@ export default function AdminProductsPage() {
 
           {/* Products Table */}
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            {loadingProducts ? (
+              <div className="p-8 text-center text-gray-500">Loading products...</div>
+            ) : productsError ? (
+              <div className="p-8 text-center">
+                <p className="text-gray-700 font-medium">Couldn’t load products</p>
+                <p className="text-gray-500 mt-1">{productsError}</p>
+                <button
+                  onClick={loadProducts}
+                  className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -196,8 +244,9 @@ export default function AdminProductsPage() {
                 </tbody>
               </table>
             </div>
+            )}
 
-            {filteredProducts.length === 0 && (
+            {!loadingProducts && !productsError && filteredProducts.length === 0 && (
               <div className="p-8 text-center text-gray-500">
                 No products found
               </div>
@@ -217,15 +266,17 @@ export default function AdminProductsPage() {
             <div className="flex gap-4">
               <button
                 onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400"
               >
-                Delete
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

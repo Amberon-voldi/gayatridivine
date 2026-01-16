@@ -8,7 +8,6 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import ShippingInvoice from "@/components/admin/ShippingInvoice";
 import { databases, DATABASE_ID, COLLECTIONS } from "@/lib/appwrite";
-import { getProductById } from "@/data/products";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-200",

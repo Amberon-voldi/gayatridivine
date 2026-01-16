@@ -1,14 +1,42 @@
 ﻿"use client";
 
-import { useMemo, Suspense } from "react";
+import { useEffect, useMemo, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
-import { products } from "@/data/products";
+import { listAllProducts } from "@/lib/products";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category") || "all";
   const searchQuery = searchParams.get("search") || "";
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const items = await listAllProducts();
+        if (!cancelled) setProducts(items);
+      } catch (e) {
+        console.error("Failed to load products:", e);
+        if (!cancelled) setError(e?.message || "Failed to load products");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -30,6 +58,32 @@ function ProductsContent() {
 
     return result;
   }, [categoryParam, searchQuery]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="animate-pulse">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-gray-200 rounded-xl aspect-square"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Couldn’t load products</h3>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <a href="/" className="text-red-600 hover:text-red-700 font-medium">
+          Retry
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,7 +1,6 @@
 "use client";
 
 import { forwardRef } from "react";
-import { getProductById } from "@/data/products";
 
 const ShippingInvoice = forwardRef(({ order, onClose }, ref) => {
   const getOrderItems = () => {
@@ -234,18 +233,17 @@ const ShippingInvoice = forwardRef(({ order, onClose }, ref) => {
                 </thead>
                 <tbody>
                   {items.map((item, index) => {
-                    const product = getProductById(item.productId);
-                    const unitPrice = item.price || product?.price || 0;
+                    const unitPrice = item.price || 0;
                     return (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="border px-3 py-2 text-sm text-gray-600">{index + 1}</td>
                         <td className="border px-3 py-2">
-                          <p className="font-medium text-gray-900">{product?.name || item.name}</p>
+                          <p className="font-medium text-gray-900">{item.name || `Product ${item.productId || item.id || ""}`}</p>
                           {item.color && (
                             <p className="text-xs text-gray-500">Color: {item.color}</p>
                           )}
-                          {product?.sku && (
-                            <p className="text-xs text-gray-500">SKU: {product.sku}</p>
+                          {(item.productId || item.id) && (
+                            <p className="text-xs text-gray-500">ID: {item.productId || item.id}</p>
                           )}
                         </td>
                         <td className="border px-3 py-2 text-center text-sm text-gray-900">{item.quantity}</td>
