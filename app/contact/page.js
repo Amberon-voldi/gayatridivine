@@ -1,6 +1,11 @@
 ﻿import Link from "next/link";
 
 export default function ContactPage() {
+  const phoneNumbers = [
+    { raw: "9319918797", e164: "+919319918797" },
+    { raw: "9717029339", e164: "+919717029339" },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
@@ -28,7 +33,12 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Email</h3>
-                <p className="text-gray-600">support@gayatridivine.com</p>
+                <a
+                  href="mailto:Gayatridivinestores@gmail.com"
+                  className="text-gray-600 hover:text-red-600 transition-colors"
+                >
+                  Gayatridivinestores@gmail.com
+                </a>
                 <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
               </div>
             </div>
@@ -41,7 +51,31 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Phone</h3>
-                <p className="text-gray-600">+91 98765 43210</p>
+                <div className="space-y-3">
+                  {phoneNumbers.map((p) => (
+                    <div key={p.raw}>
+                      <p className="text-gray-600">+91 {p.raw}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <a
+                          href={`tel:${p.e164}`}
+                          className="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+                          aria-label={`Call +91 ${p.raw}`}
+                        >
+                          Call
+                        </a>
+                        <a
+                          href={`https://wa.me/${p.e164.replace("+", "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600 transition-colors"
+                          aria-label={`WhatsApp +91 ${p.raw}`}
+                        >
+                          WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 <p className="text-sm text-gray-500">Mon-Sat, 10AM - 6PM IST</p>
               </div>
             </div>
@@ -55,8 +89,8 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Address</h3>
-                <p className="text-gray-600">123 Fashion Street</p>
-                <p className="text-gray-600">Mumbai, Maharashtra 400001</p>
+                <p className="text-gray-600">954, Badarpur</p>
+                <p className="text-gray-600">New Delhi 110044</p>
               </div>
             </div>
           </div>

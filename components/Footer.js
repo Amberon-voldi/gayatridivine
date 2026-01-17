@@ -13,7 +13,7 @@ export default function Footer() {
                 alt="Gayatari Divine Stores" 
                 className="h-12 w-12 object-contain bg-white rounded-full p-1"
               />
-              <span className="text-xl font-semibold">Gayatari Divine Stores</span>
+              <span className="text-xl font-semibold">Gayatri Divine Stores</span>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
               Discover our curated collection of premium products.
