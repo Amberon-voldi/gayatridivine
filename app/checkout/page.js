@@ -44,12 +44,21 @@ export default function CheckoutPage() {
     const raw = String(phone || "").trim();
     if (!raw) return "";
 
-    // Preserve a leading '+' if user entered it (e.g. +91XXXXXXXXXX)
-    const hasPlus = raw.startsWith("+");
-    const digits = raw.replace(/\D/g, "");
+    // Strip all non-digits first.
+    let digits = raw.replace(/\D/g, "");
     if (!digits) return "";
 
-    return hasPlus ? `+${digits}` : digits;
+    // Remove leading trunk zeros or international leading zeros (e.g. 0..., 00...)
+    digits = digits.replace(/^0+/, "").replace(/^00/, "");
+
+    // If it already starts with country code 91, keep as-is (no plus)
+    if (digits.startsWith("91")) return digits;
+
+    // If user entered a 10-digit local number, prefix with 91
+    if (digits.length === 10) return `91${digits}`;
+
+    // Fallback: return digits without any plus sign; upstream will validate and return an error if needed.
+    return digits;
   };
 
   const handleChange = (e) => {
