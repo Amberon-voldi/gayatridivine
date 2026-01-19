@@ -7,6 +7,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { getProduct, updateProduct } from "@/lib/products";
 import { listCategories } from "@/lib/categories";
+import { storage, BUCKETS, ID } from "@/lib/appwrite";
 
 export default function EditProductPage({ params }) {
   const router = useRouter();
@@ -18,7 +19,41 @@ export default function EditProductPage({ params }) {
   const [formData, setFormData] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [categories, setCategories] = useState([]);
+
+  const uploadImageToMainBucket = async (file) => {
+    if (!file) return "";
+    const uploaded = await storage.createFile(BUCKETS.MAIN, ID.unique(), file);
+    const fileId = uploaded?.$id;
+    if (!fileId) throw new Error("Upload failed: missing file id");
+    return storage.getFileView(BUCKETS.MAIN, fileId);
+  };
+
+  const setMainImageUrl = (url) => {
+    const clean = String(url || "").trim();
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const existing = Array.isArray(prev.images) ? prev.images.filter(Boolean) : [];
+      const merged = clean ? [clean, ...existing.filter((x) => x !== clean)] : existing;
+      return {
+        ...prev,
+        image: clean,
+        images: merged.length > 0 ? merged : [""]
+      };
+    });
+  };
+
+  const addAdditionalImageUrls = (urls) => {
+    const cleaned = (urls || []).map((u) => String(u || "").trim()).filter(Boolean);
+    if (cleaned.length === 0) return;
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const existing = Array.isArray(prev.images) ? prev.images.filter(Boolean) : [];
+      const merged = [...existing, ...cleaned].filter((v, i, a) => a.indexOf(v) === i);
+      return { ...prev, images: merged.length > 0 ? merged : [""] };
+    });
+  };
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
@@ -289,15 +324,28 @@ export default function EditProductPage({ params }) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Main Image URL *
+                      Main Image
                     </label>
                     <input
-                      type="url"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleChange}
-                      required
-                      placeholder="https://..."
+                      type="file"
+                      accept="image/*"
+                      disabled={uploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          setUploading(true);
+                          setError("");
+                          const url = await uploadImageToMainBucket(file);
+                          setMainImageUrl(url);
+                        } catch (err) {
+                          console.error("Main image upload failed:", err);
+                          setError(err?.message || "Failed to upload image");
+                        } finally {
+                          setUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                     {formData.image && (
@@ -307,12 +355,45 @@ export default function EditProductPage({ params }) {
                         className="mt-2 w-24 h-24 object-cover rounded-lg"
                       />
                     )}
+                    {uploading && (
+                      <p className="mt-2 text-sm text-gray-500">Uploading to bucket: main…</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Additional Images
                     </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={uploading}
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length === 0) return;
+                        try {
+                          setUploading(true);
+                          setError("");
+                          const urls = [];
+                          for (const f of files) {
+                            const u = await uploadImageToMainBucket(f);
+                            urls.push(u);
+                          }
+                          addAdditionalImageUrls(urls);
+                        } catch (err) {
+                          console.error("Additional image upload failed:", err);
+                          setError(err?.message || "Failed to upload images");
+                        } finally {
+                          setUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Images are uploaded to Appwrite bucket <span className="font-medium">main</span>.
+                    </p>
                     {formData.images.map((img, index) => (
                       <div key={index} className="flex gap-2 mb-2">
                         <input
