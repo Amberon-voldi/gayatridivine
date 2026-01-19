@@ -30,7 +30,8 @@ function toPlainTextDescription(value, maxLen = 160) {
 
 export async function generateMetadata({ params }) {
   const baseUrl = getBaseUrl();
-  const productId = params?.id;
+  const unwrappedParams = await params;
+  const productId = unwrappedParams?.id;
   const url = `${baseUrl}/product/${encodeURIComponent(productId || "")}`;
 
   try {
@@ -55,7 +56,7 @@ export async function generateMetadata({ params }) {
         title,
         description,
         url,
-        type: "product",
+        type: "website",
         images: absoluteImage ? [{ url: absoluteImage, alt: product?.name || "Product" }] : [],
       },
       twitter: {
@@ -78,7 +79,8 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductPage({ params }) {
-  const productId = params?.id;
+  const unwrappedParams = await params;
+  const productId = unwrappedParams?.id;
   const initialProduct = productId ? await getProduct(productId).catch(() => null) : null;
   return <ProductClient productId={productId} initialProduct={initialProduct} />;
 }
