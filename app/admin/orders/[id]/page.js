@@ -146,6 +146,16 @@ export default function OrderDetailPage({ params }) {
     }
   };
 
+  const normalizeOrderItem = (item) => {
+    const productId = item?.productId ?? item?.id ?? "";
+    const name = item?.name ?? item?.productName ?? "";
+    const image = item?.image ?? item?.productImage ?? "";
+    const price = typeof item?.price === "number" ? item.price : Number(item?.price || 0);
+    const quantity = typeof item?.quantity === "number" ? item.quantity : Number(item?.quantity || 0);
+    const color = item?.color ?? item?.selectedColor ?? null;
+    return { productId, name, image, price, quantity, color };
+  };
+
   const getShippingAddress = () => {
     if (!order?.shippingAddress) return null;
     try {
@@ -291,27 +301,27 @@ export default function OrderDetailPage({ params }) {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
                 <div className="space-y-4">
                   {items.map((item, index) => {
-                    const product = getProductById(item.productId);
+                    const normalized = normalizeOrderItem(item);
                     return (
                       <div key={index} className="flex gap-4 pb-4 border-b last:border-0">
                         <img
-                          src={product?.image || "/placeholder.jpg"}
-                          alt={product?.name || item.name}
+                          src={normalized.image || "/placeholder.jpg"}
+                          alt={normalized.name || "Product"}
                           className="w-20 h-20 object-cover rounded-lg"
                         />
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{product?.name || item.name}</h4>
-                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                          {item.color && (
-                            <p className="text-sm text-gray-500">Color: {item.color}</p>
+                          <h4 className="font-medium text-gray-900">{normalized.name || "Product"}</h4>
+                          <p className="text-sm text-gray-500">Qty: {normalized.quantity}</p>
+                          {normalized.color && (
+                            <p className="text-sm text-gray-500">Color: {normalized.color}</p>
                           )}
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-gray-900">
-                            ₹{((item.price || product?.price || 0) * item.quantity).toLocaleString()}
+                            ₹{((normalized.price || 0) * (normalized.quantity || 0)).toLocaleString()}
                           </p>
                           <p className="text-sm text-gray-500">
-                            ₹{(item.price || product?.price || 0).toLocaleString()} each
+                            ₹{(normalized.price || 0).toLocaleString()} each
                           </p>
                         </div>
                       </div>
