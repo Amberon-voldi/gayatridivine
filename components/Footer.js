@@ -17,7 +17,7 @@ export default function Footer() {
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
               Discover our curated collection of premium products.
-              Quality craftsmanship meets timeless elegance at Gayatari Divine Stores.
+              Quality craftsmanship meets timeless elegance at Gayatri Divine Stores.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
