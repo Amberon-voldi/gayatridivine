@@ -5,22 +5,44 @@ import { account } from "@/lib/appwrite";
 
 const AdminContext = createContext();
 
-// Admin emails - add your admin emails here
-export const ADMIN_EMAILS = ["admin@gayataridivine.com","ambujpandey742@gmail.com", "owner@gayataridivine.com"];
+// Fallback admin emails (used if settings fail to load)
+export const ADMIN_EMAILS = [
+  "admin@gayataridivine.com",
+  "ambujpandey742@gmail.com",
+  "owner@gayataridivine.com",
+];
 
 export function AdminProvider({ children }) {
   const [admin, setAdmin] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [allowedEmails, setAllowedEmails] = useState(ADMIN_EMAILS);
 
   useEffect(() => {
-    checkAdminSession();
+    (async () => {
+      await loadAllowedEmails();
+      await checkAdminSession();
+    })();
   }, []);
+
+  const loadAllowedEmails = async () => {
+    try {
+      const res = await fetch("/api/settings", { cache: "no-store" });
+      const json = await res.json();
+      const fromSettings = json?.settings?.admin?.adminEmails;
+      if (Array.isArray(fromSettings) && fromSettings.length > 0) {
+        const merged = [...new Set([...ADMIN_EMAILS, ...fromSettings])];
+        setAllowedEmails(merged);
+      }
+    } catch {
+      // ignore; keep fallback
+    }
+  };
 
   const checkAdminSession = async () => {
     try {
       // Check if user is already logged in (from main auth or admin)
       const session = await account.get();
-      if (session && ADMIN_EMAILS.includes(session.email)) {
+      if (session && allowedEmails.includes(session.email)) {
         // User is logged in and is an admin - grant access automatically
         setAdmin(session);
       } else {
@@ -36,19 +58,21 @@ export function AdminProvider({ children }) {
   // Re-check session when called (useful after main auth login)
   const refreshAdminStatus = async () => {
     setIsLoading(true);
+    await loadAllowedEmails();
     await checkAdminSession();
   };
 
   const adminLogin = async (email, password) => {
     try {
-      if (!ADMIN_EMAILS.includes(email)) {
+      await loadAllowedEmails();
+      if (!allowedEmails.includes(email)) {
         return { success: false, error: "Unauthorized access" };
       }
       
       // Try to get existing session first
       try {
         const existingSession = await account.get();
-        if (existingSession && ADMIN_EMAILS.includes(existingSession.email)) {
+        if (existingSession && allowedEmails.includes(existingSession.email)) {
           setAdmin(existingSession);
           return { success: true };
         }
@@ -88,7 +112,8 @@ export function AdminProvider({ children }) {
         adminLogin,
         adminLogout,
         refreshAdminStatus,
-        ADMIN_EMAILS
+        ADMIN_EMAILS,
+        allowedEmails,
       }}
     >
       {children}

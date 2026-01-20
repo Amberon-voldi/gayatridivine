@@ -1,8 +1,61 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useMemo, useState } from "react";
 
 const ShippingInvoice = forwardRef(({ order, onClose }, ref) => {
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch("/api/settings", { cache: "no-store" });
+        const json = await res.json();
+        if (!cancelled && json?.success) setSettings(json.settings);
+      } catch {
+        // ignore (fallback values are used)
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const seller = useMemo(() => {
+    const store = settings?.store || {};
+    const gst = settings?.gst || {};
+    const admin = settings?.admin || {};
+
+    const storeName = store.storeName || "Gayatri Divine";
+    const tagline = store.tagline || "";
+    const email = admin.supportEmail || store.storeEmail || "";
+    const phone = store.storePhone || "";
+    const address = store.storeAddress || "";
+    const logoPath = store.logoPath || "/logo.png";
+
+    return {
+      storeName,
+      tagline,
+      email,
+      phone,
+      address,
+      logoPath,
+      gstEnabled: !!gst.enabled,
+      gstin: gst.gstin || "",
+    };
+  }, [settings]);
+
+  const formatPhoneDisplay = (value) => {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.length === 10) return `+91 ${digits}`;
+    if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
+    return value;
+  };
+
   const getOrderItems = () => {
     if (!order?.items) return [];
     try {
@@ -96,14 +149,14 @@ const ShippingInvoice = forwardRef(({ order, onClose }, ref) => {
             <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-gray-300">
               <div className="flex items-center gap-4">
                 <img
-                  src="/logo.png"
-                  alt="Gayatari Divine Stores"
+                  src={seller.logoPath}
+                  alt={seller.storeName}
                   className="w-16 h-16 object-contain"
                 />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Gayatari Divine Stores</h1>
-                  <p className="text-sm text-gray-600">Premium Products</p>
-                  <p className="text-sm text-gray-600">Email: support@gayataridivine.com</p>
+                  <h1 className="text-2xl font-bold text-gray-900">{seller.storeName}</h1>
+                  {seller.tagline && <p className="text-sm text-gray-600">{seller.tagline}</p>}
+                  {seller.email && <p className="text-sm text-gray-600">Email: {seller.email}</p>}
                 </div>
               </div>
               <div className="text-right">
@@ -127,11 +180,14 @@ const ShippingInvoice = forwardRef(({ order, onClose }, ref) => {
                   </svg>
                   Ship From (Seller)
                 </h3>
-                <p className="font-semibold text-gray-900">Gayatari Divine Stores</p>
-                <p className="text-sm text-gray-600">123 Commerce Street</p>
-                <p className="text-sm text-gray-600">Mumbai, Maharashtra 400001</p>
-                <p className="text-sm text-gray-600">Phone: +91 98765 43210</p>
-                <p className="text-sm text-gray-600">GSTIN: 27AABCU9603R1ZM</p>
+                <p className="font-semibold text-gray-900">{seller.storeName}</p>
+                {seller.address && <p className="text-sm text-gray-600">{seller.address}</p>}
+                {seller.phone && (
+                  <p className="text-sm text-gray-600">Phone: {formatPhoneDisplay(seller.phone)}</p>
+                )}
+                {seller.gstin && (
+                  <p className="text-sm text-gray-600">GSTIN: {seller.gstin}</p>
+                )}
               </div>
 
               {/* Ship To */}
@@ -335,8 +391,14 @@ const ShippingInvoice = forwardRef(({ order, onClose }, ref) => {
 
             {/* Footer */}
             <div className="border-t pt-4 text-center text-xs text-gray-500">
-              <p>Thank you for shopping with Gayatari Divine Stores!</p>
-              <p className="mt-1">For queries, contact us at support@gayataridivine.com | +91 98765 43210</p>
+              <p>Thank you for shopping with {seller.storeName}!</p>
+              {(seller.email || seller.phone) && (
+                <p className="mt-1">
+                  For queries, contact us at {seller.email || ""}
+                  {seller.email && seller.phone ? " | " : ""}
+                  {seller.phone ? formatPhoneDisplay(seller.phone) : ""}
+                </p>
+              )}
               <p className="mt-2 text-gray-400">This is a computer-generated invoice and does not require a signature.</p>
             </div>
           </div>

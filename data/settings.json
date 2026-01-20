@@ -1,0 +1,41 @@
+{
+  "store": {
+    "storeName": "Gayatri Divine",
+    "tagline": "Premium Products",
+    "storeEmail": "support@gayatridivine.com",
+    "storePhone": "9876543210",
+    "storeAddress": "Delhi, 110044",
+    "logoPath": "/logo.png",
+    "currency": "INR"
+  },
+  "shipping": {
+    "freeShippingThreshold": 1500,
+    "standardShippingRate": 99,
+    "expressShippingRate": 199,
+    "estimatedDelivery": "5-7 business days"
+  },
+  "payment": {
+    "razorpayEnabled": true,
+    "codEnabled": true,
+    "codLimit": 10000,
+    "razorpayKeyId": ""
+  },
+  "gst": {
+    "enabled": false,
+    "gstin": "",
+    "ratePercent": 18,
+    "pricesAreInclusive": true
+  },
+  "otp": {
+    "enabled": true,
+    "provider": "msg91",
+    "requireOnCheckout": true
+  },
+  "admin": {
+    "adminEmails": [
+      "admin@gayatridivine.com",
+      "owner@gayatridivine.com"
+    ],
+    "supportEmail": "support@gayatridivine.com"
+  }
+}
