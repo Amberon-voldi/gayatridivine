@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -15,6 +15,8 @@ export default function NewProductPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [mainImagePreview, setMainImagePreview] = useState("");
+  const mainImageUrlRef = useRef("");
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -33,11 +35,25 @@ export default function NewProductPage() {
 
   const uploadImageToMainBucket = async (file) => {
     if (!file) return "";
-    const uploaded = await storage.createFile(BUCKETS.MAIN, ID.unique(), file);
+    const uploaded = await storage.createFile({
+      bucketId: BUCKETS.MAIN,
+      fileId: ID.unique(),
+      file,
+    });
     const fileId = uploaded?.$id;
     if (!fileId) throw new Error("Upload failed: missing file id");
-    return storage.getFileView(BUCKETS.MAIN, fileId);
+
+    const view = storage.getFileView({ bucketId: BUCKETS.MAIN, fileId });
+    return view?.href ? view.href : String(view);
   };
+
+  useEffect(() => {
+    return () => {
+      if (mainImagePreview && mainImagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(mainImagePreview);
+      }
+    };
+  }, [mainImagePreview]);
 
   const setMainImageUrl = (url) => {
     const clean = String(url || "").trim();
@@ -127,16 +143,33 @@ export default function NewProductPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaving(true);
-
     try {
       setError("");
-      const hasMain = Boolean(String(formData.image || "").trim());
-      const hasAny = Array.isArray(formData.images) && formData.images.some((x) => String(x || "").trim());
-      if (!hasMain && !hasAny) {
+      if (uploading) {
+        throw new Error("Please wait for the image upload to finish.");
+      }
+      const cleanedImages = Array.isArray(formData.images)
+        ? formData.images.map((x) => String(x || "").trim()).filter(Boolean)
+        : [];
+      const mainCandidate = String(
+        formData.image || mainImageUrlRef.current || cleanedImages[0] || ""
+      ).trim();
+      const mergedImages = mainCandidate
+        ? [mainCandidate, ...cleanedImages.filter((x) => x !== mainCandidate)]
+        : cleanedImages;
+
+      if (!mainCandidate && mergedImages.length === 0) {
         throw new Error("Please upload a main image (bucket: main)");
       }
-      await createProduct(formData, { ownerUserId: admin?.$id });
+
+      const submission = {
+        ...formData,
+        image: mainCandidate,
+        images: mergedImages.length > 0 ? mergedImages : [""]
+      };
+
+      setSaving(true);
+      await createProduct(submission, { ownerUserId: admin?.$id });
       alert("Product created successfully!");
       router.push("/admin/products");
     } catch (err) {
@@ -285,11 +318,18 @@ export default function NewProductPage() {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
+                        const previewUrl = URL.createObjectURL(file);
+                        setMainImagePreview((prev) => {
+                          if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+                          return previewUrl;
+                        });
                         try {
                           setUploading(true);
                           setError("");
                           const url = await uploadImageToMainBucket(file);
+                          mainImageUrlRef.current = String(url || "");
                           setMainImageUrl(url);
+                          setMainImagePreview(String(url || ""));
                         } catch (err) {
                           console.error("Main image upload failed:", err);
                           setError(err?.message || "Failed to upload image");
@@ -300,9 +340,9 @@ export default function NewProductPage() {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
-                    {formData.image && (
+                    {(mainImagePreview || formData.image) && (
                       <img
-                        src={formData.image}
+                        src={mainImagePreview || formData.image}
                         alt="Preview"
                         className="mt-2 w-24 h-24 object-cover rounded-lg"
                       />
@@ -459,10 +499,10 @@ export default function NewProductPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || uploading}
                   className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400"
                 >
-                  {saving ? "Saving..." : "Create Product"}
+                  {uploading ? "Uploading..." : saving ? "Saving..." : "Create Product"}
                 </button>
               </div>
             </div>

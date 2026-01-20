@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useRef, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -20,15 +20,31 @@ export default function EditProductPage({ params }) {
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [mainImagePreview, setMainImagePreview] = useState("");
+  const mainImageUrlRef = useRef("");
   const [categories, setCategories] = useState([]);
 
   const uploadImageToMainBucket = async (file) => {
     if (!file) return "";
-    const uploaded = await storage.createFile(BUCKETS.MAIN, ID.unique(), file);
+    const uploaded = await storage.createFile({
+      bucketId: BUCKETS.MAIN,
+      fileId: ID.unique(),
+      file,
+    });
     const fileId = uploaded?.$id;
     if (!fileId) throw new Error("Upload failed: missing file id");
-    return storage.getFileView(BUCKETS.MAIN, fileId);
+
+    const view = storage.getFileView({ bucketId: BUCKETS.MAIN, fileId });
+    return view?.href ? view.href : String(view);
   };
+
+  useEffect(() => {
+    return () => {
+      if (mainImagePreview && mainImagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(mainImagePreview);
+      }
+    };
+  }, [mainImagePreview]);
 
   const setMainImageUrl = (url) => {
     const clean = String(url || "").trim();
@@ -184,7 +200,27 @@ export default function EditProductPage({ params }) {
 
     try {
       setError("");
-      await updateProduct(productId, formData);
+      if (uploading) {
+        throw new Error("Please wait for the image upload to finish.");
+      }
+
+      const cleanedImages = Array.isArray(formData.images)
+        ? formData.images.map((x) => String(x || "").trim()).filter(Boolean)
+        : [];
+      const mainCandidate = String(
+        formData.image || mainImageUrlRef.current || cleanedImages[0] || ""
+      ).trim();
+      const mergedImages = mainCandidate
+        ? [mainCandidate, ...cleanedImages.filter((x) => x !== mainCandidate)]
+        : cleanedImages;
+
+      const submission = {
+        ...formData,
+        image: mainCandidate,
+        images: mergedImages.length > 0 ? mergedImages : [""]
+      };
+
+      await updateProduct(productId, submission);
       alert("Product updated successfully!");
       router.push("/admin/products");
     } catch (err) {
@@ -333,11 +369,18 @@ export default function EditProductPage({ params }) {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
+                        const previewUrl = URL.createObjectURL(file);
+                        setMainImagePreview((prev) => {
+                          if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+                          return previewUrl;
+                        });
                         try {
                           setUploading(true);
                           setError("");
                           const url = await uploadImageToMainBucket(file);
+                          mainImageUrlRef.current = String(url || "");
                           setMainImageUrl(url);
+                          setMainImagePreview(String(url || ""));
                         } catch (err) {
                           console.error("Main image upload failed:", err);
                           setError(err?.message || "Failed to upload image");
@@ -348,9 +391,9 @@ export default function EditProductPage({ params }) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
-                    {formData.image && (
+                    {(mainImagePreview || formData.image) && (
                       <img
-                        src={formData.image}
+                        src={mainImagePreview || formData.image}
                         alt="Preview"
                         className="mt-2 w-24 h-24 object-cover rounded-lg"
                       />

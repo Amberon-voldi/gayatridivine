@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import {
+  digitsOnly,
+  formatIndianPhoneForInput,
+  validateIndianMobile10,
+  validatePincode6,
+} from "@/lib/validation";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -28,9 +34,14 @@ export default function CheckoutPage() {
     error: "",
   });
 
+  const [fieldErrors, setFieldErrors] = useState({
+    phone: "",
+    pincode: "",
+  });
+
   const [formData, setFormData] = useState({
     email: user?.email || "",
-    phone: user?.phone || "",
+    phone: formatIndianPhoneForInput(user?.phone || ""),
     firstName: user?.name?.split(" ")[0] || "",
     lastName: user?.name?.split(" ").slice(1).join(" ") || "",
     address: "",
@@ -63,7 +74,15 @@ export default function CheckoutPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+
+    const nextValue =
+      name === "phone" || name === "pincode" ? digitsOnly(value) : value;
+
+    setFormData({ ...formData, [name]: nextValue });
+
+    if (name === "phone" || name === "pincode") {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
 
     if (name === "phone") {
       setPhoneVerification((prev) => ({
@@ -78,11 +97,14 @@ export default function CheckoutPage() {
   };
 
   const sendPhoneOtp = async () => {
-    const identifier = normalizePhoneForMsg91(formData.phone);
-    if (!identifier) {
-      setPhoneVerification((prev) => ({ ...prev, error: "Enter a valid phone number" }));
+    const phoneError = validateIndianMobile10(formData.phone);
+    if (phoneError) {
+      setFieldErrors((prev) => ({ ...prev, phone: phoneError }));
+      setPhoneVerification((prev) => ({ ...prev, error: phoneError }));
       return;
     }
+
+    const identifier = `91${digitsOnly(formData.phone)}`;
 
     try {
       setPhoneVerification((prev) => ({
@@ -330,6 +352,15 @@ export default function CheckoutPage() {
     e.preventDefault();
     
     if (step < 3) {
+      if (step === 1) {
+        const phoneError = validateIndianMobile10(formData.phone);
+        if (phoneError) {
+          setFieldErrors((prev) => ({ ...prev, phone: phoneError }));
+          setPhoneVerification((prev) => ({ ...prev, error: phoneError }));
+          return;
+        }
+      }
+
       if (step === 1 && !phoneVerification.verified) {
         setPhoneVerification((prev) => ({
           ...prev,
@@ -346,6 +377,14 @@ export default function CheckoutPage() {
         }));
         setStep(1);
         return;
+      }
+
+      if (step === 2) {
+        const pincodeError = validatePincode6(formData.pincode);
+        if (pincodeError) {
+          setFieldErrors((prev) => ({ ...prev, pincode: pincodeError }));
+          return;
+        }
       }
 
       setStep(step + 1);
@@ -511,6 +550,9 @@ export default function CheckoutPage() {
                         required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
+                      {fieldErrors.phone && (
+                        <p className="mt-2 text-xs text-red-700">{fieldErrors.phone}</p>
+                      )}
 
                       <div className="mt-3 rounded-lg border border-gray-200 p-4 bg-gray-50">
                         <div className="flex items-center justify-between gap-4">
@@ -666,6 +708,9 @@ export default function CheckoutPage() {
                           required
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
+                        {fieldErrors.pincode && (
+                          <p className="mt-2 text-xs text-red-700">{fieldErrors.pincode}</p>
+                        )}
                       </div>
                     </div>
                   </div>

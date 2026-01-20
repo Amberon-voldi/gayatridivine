@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { digitsOnly, validateIndianMobile10, validatePincode6 } from "@/lib/validation";
 
 export default function AddressesPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function AddressesPage() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -57,11 +59,27 @@ export default function AddressesPage() {
 
   const handleChange = (e) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    const name = e.target.name;
+    const nextValue = name === "phone" || name === "pincode" ? digitsOnly(value) : value;
+    setFormData({ ...formData, [name]: nextValue });
+    setFormError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const phoneError = validateIndianMobile10(formData.phone);
+    if (phoneError) {
+      setFormError(phoneError);
+      return;
+    }
+
+    const pincodeError = validatePincode6(formData.pincode);
+    if (pincodeError) {
+      setFormError(pincodeError);
+      return;
+    }
+
     await addAddress(formData);
     setFormData({
       fullName: "",
@@ -109,6 +127,13 @@ export default function AddressesPage() {
       {showForm && (
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Add New Address</h2>
+
+          {formError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              {formError}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

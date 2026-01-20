@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { digitsOnly, validateIndianMobile10 } from "@/lib/validation";
 
 function RegisterContent() {
   const router = useRouter();
@@ -28,7 +29,9 @@ function RegisterContent() {
   }
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const name = e.target.name;
+    const value = name === "phone" ? digitsOnly(e.target.value) : e.target.value;
+    setFormData({ ...formData, [name]: value });
     setError("");
   };
 
@@ -45,6 +48,13 @@ function RegisterContent() {
 
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
+    }
+
+    const phoneError = validateIndianMobile10(formData.phone);
+    if (phoneError) {
+      setError(phoneError);
       setIsLoading(false);
       return;
     }
