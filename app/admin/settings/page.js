@@ -349,8 +349,22 @@ export default function AdminSettingsPage() {
                 <div className="space-y-6 max-w-2xl">
                   <h3 className="text-lg font-semibold text-gray-900">Payment Methods</h3>
                   
-                  <div className="space-y-4">
-                    {/* Razorpay */}
+                  {/* Warning if no payment method is enabled */}
+                  {!safeSettings.payment.razorpayEnabled && !safeSettings.payment.codEnabled && (
+                    <div className="p-4 border border-yellow-300 rounded-lg bg-yellow-50">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                          <p className="font-medium text-yellow-800">No payment method enabled</p>
+                          <p className="text-sm text-yellow-700 mt-1">Enable at least one payment method to allow customers to complete checkout.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-4">\n                    {/* Razorpay */}
                     <div className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -418,21 +432,62 @@ export default function AdminSettingsPage() {
                       </div>
                       
                       {safeSettings.payment.codEnabled && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Maximum COD Amount (₹)
-                          </label>
-                          <input
-                            type="number"
-                            name="codLimit"
-                            value={safeSettings.payment.codLimit}
-                            onChange={(e) => updateSection("payment", { codLimit: e.target.value })}
-                            min="0"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">Orders above this amount must pay online</p>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Maximum COD Amount (₹)
+                            </label>
+                            <input
+                              type="number"
+                              name="codLimit"
+                              value={safeSettings.payment.codLimit}
+                              onChange={(e) => updateSection("payment", { codLimit: e.target.value })}
+                              min="0"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Orders above this amount will require online payment. Set to 0 to disable limit.</p>
+                          </div>
+                          
+                          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-start gap-2">
+                              <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <p className="text-xs text-blue-800">
+                                <strong>Tip:</strong> If COD limit is exceeded and online payment is enabled, customers will be required to pay online. If only COD is enabled, there's no limit restriction.
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
+                    </div>
+                    
+                    {/* Payment Configuration Info */}
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Payment Options Guide
+                      </h4>
+                      <ul className="space-y-2 text-sm text-gray-700">
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-600 font-bold mt-0.5">✓</span>
+                          <span><strong>Only Online Payment:</strong> Enable Razorpay, disable COD</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-600 font-bold mt-0.5">✓</span>
+                          <span><strong>Only Cash on Delivery:</strong> Enable COD, disable Razorpay</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-600 font-bold mt-0.5">✓</span>
+                          <span><strong>Both Methods:</strong> Enable both for maximum flexibility</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-600 font-bold mt-0.5">i</span>
+                          <span>Use COD limit to encourage online payments for high-value orders</span>
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>

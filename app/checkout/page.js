@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -23,6 +23,7 @@ export default function CheckoutPage() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [settings, setSettings] = useState(null);
 
   const [phoneVerification, setPhoneVerification] = useState({
     verified: false,
@@ -48,8 +49,30 @@ export default function CheckoutPage() {
     city: "",
     state: "",
     pincode: "",
-    paymentMethod: "razorpay"
+    paymentMethod: ""
   });
+
+  // Fetch settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (data.success && data.settings) {
+          setSettings(data.settings);
+          // Set default payment method based on what's enabled
+          if (data.settings.payment?.razorpayEnabled) {
+            setFormData(prev => ({ ...prev, paymentMethod: "razorpay" }));
+          } else if (data.settings.payment?.codEnabled) {
+            setFormData(prev => ({ ...prev, paymentMethod: "cod" }));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const normalizePhoneForMsg91 = (phone) => {
     const raw = String(phone || "").trim();
@@ -740,57 +763,88 @@ export default function CheckoutPage() {
 
                   <div className="space-y-4">
                     {/* Razorpay - Online Payment */}
-                    <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                      formData.paymentMethod === "razorpay" ? "border-red-600 bg-red-50" : "border-gray-300"
-                    }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="razorpay"
-                        checked={formData.paymentMethod === "razorpay"}
-                        onChange={handleChange}
-                        className="text-red-600 focus:ring-red-500"
-                      />
-                      <span className="ml-3 flex-1">
-                        <span className="block font-medium text-gray-900">Pay Online</span>
-                        <span className="block text-sm text-gray-500">UPI, Cards, Net Banking, Wallets</span>
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <img src="https://cdn.razorpay.com/static/assets/logo/payment.svg" alt="Razorpay" className="h-6" />
-                      </div>
-                    </label>
-                    {formData.paymentMethod === "razorpay" && (
-                      <div className="ml-7 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600 mb-3">
-                          You will be redirected to Razorpay secure payment gateway to complete your payment.
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">UPI</span>
-                          <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Credit Card</span>
-                          <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Debit Card</span>
-                          <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Net Banking</span>
-                          <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Wallets</span>
-                        </div>
-                      </div>
+                    {settings?.payment?.razorpayEnabled && (
+                      <>
+                        <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                          formData.paymentMethod === "razorpay" ? "border-red-600 bg-red-50" : "border-gray-300"
+                        }`}>
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="razorpay"
+                            checked={formData.paymentMethod === "razorpay"}
+                            onChange={handleChange}
+                            className="text-red-600 focus:ring-red-500"
+                          />
+                          <span className="ml-3 flex-1">
+                            <span className="block font-medium text-gray-900">Pay Online</span>
+                            <span className="block text-sm text-gray-500">UPI, Cards, Net Banking, Wallets</span>
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <img src="https://cdn.razorpay.com/static/assets/logo/payment.svg" alt="Razorpay" className="h-6" />
+                          </div>
+                        </label>
+                        {formData.paymentMethod === "razorpay" && (
+                          <div className="ml-7 p-4 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-600 mb-3">
+                              You will be redirected to Razorpay secure payment gateway to complete your payment.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">UPI</span>
+                              <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Credit Card</span>
+                              <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Debit Card</span>
+                              <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Net Banking</span>
+                              <span className="px-2 py-1 bg-white border rounded text-xs text-gray-600">Wallets</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {/* COD */}
-                    <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                      formData.paymentMethod === "cod" ? "border-red-600 bg-red-50" : "border-gray-300"
-                    }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="cod"
-                        checked={formData.paymentMethod === "cod"}
-                        onChange={handleChange}
-                        className="text-red-600 focus:ring-red-500"
-                      />
-                      <span className="ml-3">
-                        <span className="block font-medium text-gray-900">Cash on Delivery</span>
-                        <span className="block text-sm text-gray-500">Pay when you receive your order</span>
-                      </span>
-                    </label>
+                    {settings?.payment?.codEnabled && (
+                      <>
+                        {total > (settings?.payment?.codLimit || 0) && settings?.payment?.razorpayEnabled ? (
+                          <div className="p-4 border border-gray-300 rounded-lg bg-gray-50 opacity-60">
+                            <div className="flex items-start gap-3">
+                              <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                              <div className="flex-1">
+                                <span className="block font-medium text-gray-700">Cash on Delivery - Not Available</span>
+                                <span className="block text-sm text-gray-600">COD is only available for orders up to ₹{settings?.payment?.codLimit?.toLocaleString('en-IN')}. Please use online payment.</span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                            formData.paymentMethod === "cod" ? "border-red-600 bg-red-50" : "border-gray-300"
+                          }`}>
+                            <input
+                              type="radio"
+                              name="paymentMethod"
+                              value="cod"
+                              checked={formData.paymentMethod === "cod"}
+                              onChange={handleChange}
+                              className="text-red-600 focus:ring-red-500"
+                            />
+                            <span className="ml-3">
+                              <span className="block font-medium text-gray-900">Cash on Delivery</span>
+                              <span className="block text-sm text-gray-500">Pay when you receive your order</span>
+                            </span>
+                          </label>
+                        )}
+                      </>
+                    )}
+
+                    {/* No payment methods enabled */}
+                    {!settings?.payment?.razorpayEnabled && !settings?.payment?.codEnabled && (
+                      <div className="p-4 border border-yellow-300 rounded-lg bg-yellow-50">
+                        <p className="text-sm text-yellow-800">
+                          Payment methods are currently unavailable. Please contact support.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-6 flex gap-4">

@@ -9,14 +9,14 @@
     "currency": "INR"
   },
   "shipping": {
-    "freeShippingThreshold": 1500,
+    "freeShippingThreshold": 1,
     "standardShippingRate": 99,
     "expressShippingRate": 199,
     "estimatedDelivery": "5-7 business days"
   },
   "payment": {
     "razorpayEnabled": true,
-    "codEnabled": true,
+    "codEnabled": false,
     "codLimit": 10000,
     "razorpayKeyId": ""
   },
@@ -24,7 +24,7 @@
     "enabled": false,
     "gstin": "",
     "ratePercent": 18,
-    "pricesAreInclusive": true
+    "pricesAreInclusive": false
   },
   "otp": {
     "enabled": true,
