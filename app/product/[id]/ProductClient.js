@@ -22,6 +22,7 @@ export default function ProductClient({ productId, initialProduct = null }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,7 +220,33 @@ export default function ProductClient({ productId, initialProduct = null }) {
           </div>
 
           {/* Description */}
-          <p className="text-gray-600 mt-6">{product.description}</p>
+          <div className="mt-6">
+            <p className={`text-gray-600 ${!isDescriptionExpanded ? 'line-clamp-3' : ''}`}>
+              {product.description}
+            </p>
+            {product.description && product.description.length > 150 && (
+              <button
+                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                className="text-red-600 hover:text-red-700 font-medium text-sm mt-2 flex items-center gap-1"
+              >
+                {isDescriptionExpanded ? (
+                  <>
+                    Read Less
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    Read More
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
 
           {/* Features */}
           <div className="mt-6">

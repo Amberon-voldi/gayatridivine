@@ -382,18 +382,26 @@ export default function OrderDetailPage({ params }) {
                 <div className="space-y-3 text-sm">
                   <div>
                     <span className="text-gray-500">Name:</span>
-                    <p className="font-medium text-gray-900">{order.customerName || "Guest"}</p>
+                    <p className="font-medium text-gray-900">
+                      {order.customerName || (() => {
+                        const addr = getShippingAddress();
+                        if (addr?.name) return addr.name;
+                        if (addr?.firstName && addr?.lastName) return `${addr.firstName} ${addr.lastName}`;
+                        if (addr?.firstName || addr?.lastName) return addr.firstName || addr.lastName;
+                        return "Guest";
+                      })()}
+                    </p>
                   </div>
-                  {order.email && (
+                  {order.contactEmail && (
                     <div>
                       <span className="text-gray-500">Email:</span>
-                      <p className="font-medium text-gray-900">{order.email}</p>
+                      <p className="font-medium text-gray-900">{order.contactEmail}</p>
                     </div>
                   )}
-                  {order.phone && (
+                  {order.contactPhone && (
                     <div>
                       <span className="text-gray-500">Phone:</span>
-                      <p className="font-medium text-gray-900">{order.phone}</p>
+                      <p className="font-medium text-gray-900">{order.contactPhone}</p>
                     </div>
                   )}
                 </div>
@@ -404,10 +412,15 @@ export default function OrderDetailPage({ params }) {
                 <div className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h3>
                   <div className="text-sm text-gray-600">
-                    <p className="font-medium text-gray-900">{shippingAddress.name}</p>
+                    <p className="font-medium text-gray-900">
+                      {shippingAddress.name || 
+                       (shippingAddress.firstName && shippingAddress.lastName 
+                         ? `${shippingAddress.firstName} ${shippingAddress.lastName}` 
+                         : shippingAddress.firstName || shippingAddress.lastName || order.customerName || "Customer")}
+                    </p>
                     <p>{shippingAddress.address}</p>
                     <p>{shippingAddress.city}, {shippingAddress.state} {shippingAddress.pincode}</p>
-                    <p className="mt-2">{shippingAddress.phone}</p>
+                    <p className="mt-2">{shippingAddress.phone || order.contactPhone}</p>
                   </div>
                 </div>
               )}

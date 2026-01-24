@@ -40,11 +40,12 @@ export default function CheckoutPage() {
     pincode: "",
   });
 
+  const [locationLoading, setLocationLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     email: user?.email || "",
     phone: formatIndianPhoneForInput(user?.phone || ""),
-    firstName: user?.name?.split(" ")[0] || "",
-    lastName: user?.name?.split(" ").slice(1).join(" ") || "",
+    name: user?.name || "",
     address: "",
     city: "",
     state: "",
@@ -93,6 +94,79 @@ export default function CheckoutPage() {
 
     // Fallback: return digits without any plus sign; upstream will validate and return an error if needed.
     return digits;
+  };
+
+  const getCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setLocationLoading(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Use Nominatim reverse geocoding API (free, no API key required)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+            {
+              headers: {
+                'User-Agent': 'GayatriDivine/1.0'
+              }
+            }
+          );
+          
+          const data = await response.json();
+          
+          if (data && data.address) {
+            const addr = data.address;
+            
+            // Extract address components
+            const streetAddress = [
+              addr.house_number,
+              addr.road || addr.street,
+              addr.neighbourhood || addr.suburb
+            ].filter(Boolean).join(', ');
+            
+            setFormData(prev => ({
+              ...prev,
+              address: streetAddress || prev.address,
+              city: addr.city || addr.town || addr.village || prev.city,
+              state: addr.state || prev.state,
+              pincode: addr.postcode || prev.pincode
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching location details:', error);
+          alert('Failed to fetch address details. Please enter manually.');
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setLocationLoading(false);
+        
+        let message = 'Unable to retrieve your location.';
+        if (error.code === error.PERMISSION_DENIED) {
+          message = 'Location permission denied. Please allow location access or enter address manually.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          message = 'Location information is unavailable. Please enter address manually.';
+        } else if (error.code === error.TIMEOUT) {
+          message = 'Location request timed out. Please try again or enter address manually.';
+        }
+        
+        alert(message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   const handleChange = (e) => {
@@ -300,7 +374,7 @@ export default function CheckoutPage() {
           }
         },
         prefill: {
-          name: `${formData.firstName} ${formData.lastName}`,
+          name: formData.name,
           email: formData.email,
           contact: formData.phone
         },
@@ -337,13 +411,14 @@ export default function CheckoutPage() {
       subtotal,
       shipping,
       shippingAddress: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        name: formData.name,
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        pincode: formData.pincode
+        pincode: formData.pincode,
+        phone: formData.phone
       },
+      customerName: formData.name,
       contactEmail: formData.email,
       contactPhone: formData.phone,
       paymentMethod,
@@ -660,32 +735,45 @@ export default function CheckoutPage() {
               {/* Step 2: Shipping */}
               {step === 2 && (
                 <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-6">Shipping Address</h2>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900">Shipping Address</h2>
+                    <button
+                      type="button"
+                      onClick={getCurrentLocation}
+                      disabled={locationLoading}
+                      className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {locationLoading ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Getting Location...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          Use Current Location
+                        </>
+                      )}
+                    </button>
+                  </div>
 
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          value={formData.lastName}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>

@@ -80,10 +80,20 @@ export default function AdminOrdersPage() {
   if (!isAdmin) return null;
 
   const filteredOrders = orders.filter((order) => {
+    const getCustomerName = () => {
+      if (order.customerName) return order.customerName;
+      try {
+        const addr = JSON.parse(order.shippingAddress || '{}');
+        return addr.name || '';
+      } catch {
+        return '';
+      }
+    };
+    
     const matchesSearch = 
       order.$id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.customerName && order.customerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (order.email && order.email.toLowerCase().includes(searchQuery.toLowerCase()));
+      getCustomerName().toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (order.contactEmail && order.contactEmail.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -174,8 +184,17 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div>
-                            <p className="font-medium text-gray-900">{order.customerName || "Guest"}</p>
-                            <p className="text-sm text-gray-500">{order.email || order.phone}</p>
+                            <p className="font-medium text-gray-900">
+                              {order.customerName || (() => {
+                                try {
+                                  const addr = JSON.parse(order.shippingAddress || '{}');
+                                  return addr.name || "Guest";
+                                } catch {
+                                  return "Guest";
+                                }
+                              })()}
+                            </p>
+                            <p className="text-sm text-gray-500">{order.contactEmail || order.contactPhone}</p>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-gray-600">

@@ -201,17 +201,23 @@ const ShippingInvoice = forwardRef(({ order, onClose }, ref) => {
                 </h3>
                 {shippingAddress ? (
                   <>
-                    <p className="font-semibold text-gray-900">{shippingAddress.name || order.customerName}</p>
+                    <p className="font-semibold text-gray-900">
+                      {shippingAddress.name || 
+                       order.customerName || 
+                       (shippingAddress.firstName && shippingAddress.lastName 
+                         ? `${shippingAddress.firstName} ${shippingAddress.lastName}` 
+                         : shippingAddress.firstName || shippingAddress.lastName || "Customer")}
+                    </p>
                     <p className="text-sm text-gray-600">{shippingAddress.address}</p>
                     <p className="text-sm text-gray-600">
                       {shippingAddress.city}, {shippingAddress.state} - {shippingAddress.pincode}
                     </p>
-                    <p className="text-sm text-gray-600">Phone: {shippingAddress.phone || order.phone}</p>
+                    <p className="text-sm text-gray-600">Phone: {shippingAddress.phone || order.contactPhone || order.phone}</p>
                   </>
                 ) : (
                   <>
-                    <p className="font-semibold text-gray-900">{order.customerName}</p>
-                    <p className="text-sm text-gray-600">Phone: {order.phone}</p>
+                    <p className="font-semibold text-gray-900">{order.customerName || "Customer"}</p>
+                    <p className="text-sm text-gray-600">Phone: {order.contactPhone || order.phone}</p>
                   </>
                 )}
               </div>

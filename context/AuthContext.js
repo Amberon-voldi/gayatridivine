@@ -26,46 +26,24 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async () => {
     try {
-      await account.createEmailPasswordSession({ email, password });
-      const session = await account.get();
-      setUser(session);
+      // Redirect to Google OAuth
+      const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
+      await account.createOAuth2Session(
+        'google',
+        redirectUrl,
+        `${window.location.origin}/login?error=oauth_failed`
+      );
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message || "Invalid email or password" };
+      return { success: false, error: error.message || "Login failed" };
     }
   };
 
-  const register = async (name, email, password, phone) => {
-    try {
-      // Create account
-      await account.create({
-        userId: ID.unique(),
-        email,
-        password,
-        name
-      });
-      
-      // Auto login after registration
-      await account.createEmailPasswordSession({ email, password });
-      const session = await account.get();
-      
-      // Update phone if provided
-      if (phone) {
-        try {
-          await account.updatePhone({ phone, password });
-        } catch (e) {
-          // Phone update is optional, don't fail registration
-          console.log("Phone update skipped:", e.message);
-        }
-      }
-      
-      setUser(session);
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: error.message || "Registration failed" };
-    }
+  const register = async () => {
+    // Same as login for OAuth - just redirect to Google
+    return login();
   };
 
   const logout = async () => {
@@ -197,6 +175,7 @@ export function AuthProvider({ children }) {
         data: {
           userId: user.$id,
           orderNumber,
+          customerName: orderData.customerName || "",
           items: JSON.stringify(orderData.items),
           subtotal: orderData.subtotal,
           shipping: orderData.shipping,
@@ -232,6 +211,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        checkSession,
         updateProfile,
         getAddresses,
         addAddress,
