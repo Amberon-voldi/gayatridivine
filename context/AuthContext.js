@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { account, databases, DATABASE_ID, COLLECTIONS, ID, Query } from "@/lib/appwrite";
+import { account, databases, DATABASE_ID, COLLECTIONS, ID, Query, OAuthProvider } from "@/lib/appwrite";
 
 const AuthContext = createContext();
 
@@ -17,10 +17,14 @@ export function AuthProvider({ children }) {
   const checkSession = async () => {
     try {
       const session = await account.get();
+      console.log('Session found:', session);
       setUser(session);
+      return session;
     } catch (error) {
+      console.log('No active session:', error.message);
       // No active session
       setUser(null);
+      return null;
     } finally {
       setIsLoaded(true);
     }
@@ -29,14 +33,21 @@ export function AuthProvider({ children }) {
   const login = async () => {
     try {
       // Redirect to Google OAuth
-      const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
-      await account.createOAuth2Session(
-        'google',
-        redirectUrl,
-        `${window.location.origin}/login?error=oauth_failed`
-      );
+      const successUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
+      const failureUrl = typeof window !== 'undefined' ? `${window.location.origin}/login?error=oauth_failed` : '';
+      
+      console.log('Initiating OAuth with:', { successUrl, failureUrl });
+      
+      // createOAuth2Session with object parameters (SDK v21+)
+      account.createOAuth2Session({
+        provider: OAuthProvider.Google,
+        success: successUrl,
+        failure: failureUrl
+      });
+      
       return { success: true };
     } catch (error) {
+      console.error('OAuth login error:', error);
       return { success: false, error: error.message || "Login failed" };
     }
   };
@@ -48,7 +59,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await account.deleteSession({ sessionId: "current" });
+      await account.deleteSession({ sessionId: 'current' });
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -64,10 +75,15 @@ export function AuthProvider({ children }) {
       if (updates.email && updates.password) {
         await account.updateEmail({ email: updates.email, password: updates.password });
       }
+      // Update phone in prefs since we can't directly update phone with OAuth
+      if (updates.phone) {
+        await account.updatePrefs({ prefs: { phone: updates.phone } });
+      }
       const updatedUser = await account.get();
       setUser(updatedUser);
       return { success: true };
     } catch (error) {
+      console.error('Update profile error:', error);
       return { success: false, error: error.message || "Update failed" };
     }
   };
@@ -98,11 +114,11 @@ export function AuthProvider({ children }) {
         data: {
           userId: user.$id,
           ...address
-        },
-        permissions: [`read("user:${user.$id}")`, `update("user:${user.$id}")`, `delete("user:${user.$id}")`]
+        }
       });
       return { success: true, address: newAddress };
     } catch (error) {
+      console.error('Add address error:', error);
       return { success: false, error: error.message || "Failed to add address" };
     }
   };
@@ -118,6 +134,7 @@ export function AuthProvider({ children }) {
       });
       return { success: true, address: updated };
     } catch (error) {
+      console.error('Update address error:', error);
       return { success: false, error: error.message || "Failed to update address" };
     }
   };
@@ -132,6 +149,7 @@ export function AuthProvider({ children }) {
       });
       return { success: true };
     } catch (error) {
+      console.error('Remove address error:', error);
       return { success: false, error: error.message || "Failed to remove address" };
     }
   };
@@ -186,8 +204,7 @@ export function AuthProvider({ children }) {
           contactEmail: orderData.contactEmail,
           contactPhone: orderData.contactPhone || "",
           createdAt: new Date().toISOString()
-        },
-        permissions: [`read("user:${user.$id}")`]
+        }
       });
       return { 
         success: true, 
@@ -198,6 +215,7 @@ export function AuthProvider({ children }) {
         }
       };
     } catch (error) {
+      console.error('Add order error:', error);
       return { success: false, error: error.message || "Failed to create order" };
     }
   };

@@ -46,8 +46,8 @@ function LoginContent() {
               <span className="text-white font-bold text-xl">G</span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-gray-600 mt-2">Sign in to your Gayatri Divine account</p>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome to Gayatri Divine</h1>
+          <p className="text-gray-600 mt-2">Sign in or create an account with Google</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8">
@@ -84,13 +84,6 @@ function LoginContent() {
               {isLoading ? "Signing in..." : "Continue with Google"}
             </span>
           </button>
-
-          <div className="mt-6 text-center text-sm text-gray-600">
-            New to Gayatri Divine?{" "}
-            <Link href={`/register${redirect !== "/" ? `?redirect=${redirect}` : ""}`} className="text-red-600 hover:text-red-700 font-medium">
-              Create account
-            </Link>
-          </div>
         </div>
       </div>
     </div>
