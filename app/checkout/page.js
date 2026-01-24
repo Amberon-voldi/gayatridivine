@@ -106,6 +106,8 @@ export default function CheckoutPage() {
     fetchSettings();
   }, []);
 
+  const otpRequired = !!(settings?.otp?.enabled && settings?.otp?.requireOnCheckout);
+
   const normalizePhoneForMsg91 = (phone) => {
     const raw = String(phone || "").trim();
     if (!raw) return "";
@@ -240,6 +242,30 @@ export default function CheckoutPage() {
     }
   };
 
+  // Auto-send OTP once phone becomes valid (reduces clicks).
+  useEffect(() => {
+    if (!otpRequired) return;
+    if (!isAuthenticated) return;
+    if (step !== 1) return;
+    if (phoneVerification.verified) return;
+    if (phoneVerification.reqId) return;
+    if (phoneVerification.sending || phoneVerification.verifying) return;
+
+    const phoneError = validateIndianMobile10(formData.phone);
+    if (phoneError) return;
+
+    const t = setTimeout(() => {
+      const stillValid = !validateIndianMobile10(formData.phone);
+      if (!stillValid) return;
+      if (phoneVerification.verified || phoneVerification.reqId || phoneVerification.sending || phoneVerification.verifying) return;
+      sendPhoneOtp();
+    }, 600);
+
+    return () => clearTimeout(t);
+    // Intentionally omit phoneVerification/sendPhoneOtp deps to avoid re-sending as state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otpRequired, isAuthenticated, step, formData.phone]);
+
   const sendPhoneOtp = async () => {
     const phoneError = validateIndianMobile10(formData.phone);
     if (phoneError) {
@@ -354,7 +380,9 @@ export default function CheckoutPage() {
   };
 
   const subtotal = getCartTotal();
-  const shipping = subtotal > 1500 ? 0 : 99;
+  const freeShippingThreshold = settings?.shipping?.freeShippingThreshold ?? 1500;
+  const standardShippingRate = settings?.shipping?.standardShippingRate ?? 99;
+  const shipping = subtotal >= freeShippingThreshold ? 0 : standardShippingRate;
   const total = subtotal + shipping;
 
   const createRazorpayOrder = async () => {
@@ -507,29 +535,33 @@ export default function CheckoutPage() {
       }
 
       if (step === 1 && !phoneVerification.verified) {
-        setPhoneVerification((prev) => ({
-          ...prev,
-          error: "Please verify your phone number to continue.",
-        }));
-        return;
+        if (otpRequired) {
+          setPhoneVerification((prev) => ({
+            ...prev,
+            error: "Please verify your phone number to continue.",
+          }));
+          return;
+        }
       }
 
       // Save user details to profile when moving to step 2
       if (step === 1 && isAuthenticated) {
-        await updateProfile({
+        updateProfile({
           name: formData.name,
-          phone: formData.phone
-        });
+          phone: formData.phone,
+        }).catch((err) => console.warn("Profile update skipped:", err?.message || err));
       }
 
       // Defensive: if state somehow advances without verification, send user back.
       if (step === 2 && !phoneVerification.verified) {
-        setPhoneVerification((prev) => ({
-          ...prev,
-          error: "Please verify your phone number to continue.",
-        }));
-        setStep(1);
-        return;
+        if (otpRequired) {
+          setPhoneVerification((prev) => ({
+            ...prev,
+            error: "Please verify your phone number to continue.",
+          }));
+          setStep(1);
+          return;
+        }
       }
 
       if (step === 2) {
@@ -744,79 +776,85 @@ export default function CheckoutPage() {
                             <p className="mt-2 text-xs text-red-700">{fieldErrors.phone}</p>
                           )}
 
-                          <div className="mt-3 rounded-lg border border-gray-200 p-4 bg-gray-50">
-                            <div className="flex items-center justify-between gap-4">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">Verify phone via OTP</p>
-                                <p className="text-xs text-gray-600">
-                                  Required to continue.
-                                </p>
+                          {otpRequired ? (
+                            <div className="mt-3 rounded-lg border border-gray-200 p-4 bg-gray-50">
+                              <div className="flex items-center justify-between gap-4">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">Verify phone via OTP</p>
+                                  <p className="text-xs text-gray-600">Required to continue.</p>
+                                </div>
+
+                                {phoneVerification.verified ? (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
+                                    Verified
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={sendPhoneOtp}
+                                    disabled={phoneVerification.sending || !formData.phone}
+                                    className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
+                                  >
+                                    {phoneVerification.sending
+                                      ? "Sending..."
+                                      : phoneVerification.reqId
+                                        ? "Resend OTP"
+                                        : "Send OTP"}
+                                  </button>
+                                )}
                               </div>
 
-                              {phoneVerification.verified ? (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
-                                  Verified
-                                </span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={sendPhoneOtp}
-                                  disabled={phoneVerification.sending || !formData.phone}
-                                  className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
-                                >
-                                  {phoneVerification.sending ? "Sending..." : "Send OTP"}
-                                </button>
+                              {!phoneVerification.verified && phoneVerification.reqId && (
+                                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                                  <div className="sm:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+                                    <input
+                                      type="text"
+                                      inputMode="numeric"
+                                      value={phoneVerification.otp}
+                                      onChange={(e) =>
+                                        setPhoneVerification((prev) => ({
+                                          ...prev,
+                                          otp: e.target.value,
+                                          error: "",
+                                        }))
+                                      }
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={verifyPhoneOtp}
+                                    disabled={phoneVerification.verifying}
+                                    className="sm:col-span-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
+                                  >
+                                    {phoneVerification.verifying ? "Verifying..." : "Verify OTP"}
+                                  </button>
+                                </div>
+                              )}
+
+                              {phoneVerification.message && (
+                                <p className="mt-3 text-xs text-gray-700">{phoneVerification.message}</p>
+                              )}
+                              {phoneVerification.error && (
+                                <p className="mt-3 text-xs text-red-700">{phoneVerification.error}</p>
                               )}
                             </div>
-
-                            {!phoneVerification.verified && phoneVerification.reqId && (
-                              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-                                <div className="sm:col-span-2">
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    value={phoneVerification.otp}
-                                    onChange={(e) =>
-                                      setPhoneVerification((prev) => ({
-                                        ...prev,
-                                        otp: e.target.value,
-                                        error: "",
-                                      }))
-                                    }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={verifyPhoneOtp}
-                                  disabled={phoneVerification.verifying}
-                                  className="sm:col-span-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
-                                >
-                                  {phoneVerification.verifying ? "Verifying..." : "Verify OTP"}
-                                </button>
-                              </div>
-                            )}
-
-                            {phoneVerification.message && (
-                              <p className="mt-3 text-xs text-gray-700">{phoneVerification.message}</p>
-                            )}
-                            {phoneVerification.error && (
-                              <p className="mt-3 text-xs text-red-700">{phoneVerification.error}</p>
-                            )}
-                          </div>
+                          ) : (
+                            <p className="mt-3 text-xs text-gray-500">Phone verification is not required.</p>
+                          )}
                         </div>
                       </div>
 
                       <button
                         type="submit"
-                        disabled={!phoneVerification.verified}
+                        disabled={otpRequired && !phoneVerification.verified}
                         className="mt-6 w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
                       >
                         Continue to Shipping
                       </button>
 
-                      {!phoneVerification.verified && (
+                      {otpRequired && !phoneVerification.verified && (
                         <p className="mt-3 text-xs text-gray-600">
                           Verify your phone number via OTP to continue.
                         </p>

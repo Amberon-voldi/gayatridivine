@@ -15,7 +15,13 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (authLoaded) {
       if (user) {
-        loadCartFromAppwrite();
+        setIsLoaded(false);
+        (async () => {
+          const didSync = await syncCartToAppwrite();
+          if (!didSync) {
+            await loadCartFromAppwrite();
+          }
+        })();
       } else {
         loadCartFromLocalStorage();
       }
@@ -244,35 +250,73 @@ export function CartProvider({ children }) {
     setCart([]);
   };
 
-  // Sync local cart to Appwrite when user logs in
+  // Sync (merge) guest/local cart into Appwrite after login.
+  // Returns true if it performed a sync (and refreshed cart), else false.
   const syncCartToAppwrite = async () => {
-    if (!user) return;
-    
+    if (!user) return false;
+
+    let localCart = [];
     try {
-      const localCart = JSON.parse(localStorage.getItem("gayatri-divine-cart") || "[]");
-      if (localCart.length === 0) return;
+      localCart = JSON.parse(localStorage.getItem("gayatri-divine-cart") || "[]");
+    } catch {
+      localCart = [];
+    }
+
+    if (!Array.isArray(localCart) || localCart.length === 0) return false;
+
+    try {
+      const existing = await databases.listDocuments({
+        databaseId: DATABASE_ID,
+        collectionId: COLLECTIONS.CART,
+        queries: [Query.equal("userId", user.$id)]
+      });
+
+      const byKey = new Map();
+      for (const doc of existing.documents) {
+        const key = `${String(doc.productId)}::${String(doc.selectedColor || "")}`;
+        byKey.set(key, doc);
+      }
 
       for (const item of localCart) {
-        await databases.createDocument({
-          databaseId: DATABASE_ID,
-          collectionId: COLLECTIONS.CART,
-          documentId: ID.unique(),
-          data: {
-            userId: user.$id,
-            productId: String(item.id),
-            productName: item.name,
-            price: item.price,
-            image: item.image || "",
-            quantity: item.quantity,
-            selectedColor: item.selectedColor || ""
-          },
-          permissions: [`read("user:${user.$id}")`, `update("user:${user.$id}")`, `delete("user:${user.$id}")`]
-        });
+        const productId = String(item.id);
+        const selectedColor = String(item.selectedColor || "");
+        const key = `${productId}::${selectedColor}`;
+
+        const existingDoc = byKey.get(key);
+        if (existingDoc) {
+          const nextQty = (Number(existingDoc.quantity) || 0) + (Number(item.quantity) || 0);
+          await databases.updateDocument({
+            databaseId: DATABASE_ID,
+            collectionId: COLLECTIONS.CART,
+            documentId: existingDoc.$id,
+            data: { quantity: nextQty }
+          });
+        } else {
+          const created = await databases.createDocument({
+            databaseId: DATABASE_ID,
+            collectionId: COLLECTIONS.CART,
+            documentId: ID.unique(),
+            data: {
+              userId: user.$id,
+              productId,
+              productName: item.name,
+              price: item.price,
+              image: item.image || "",
+              quantity: item.quantity,
+              selectedColor,
+            },
+            permissions: [`read("user:${user.$id}")`, `update("user:${user.$id}")`, `delete("user:${user.$id}")`]
+          });
+          byKey.set(key, created);
+        }
       }
+
       localStorage.removeItem("gayatri-divine-cart");
       await loadCartFromAppwrite();
+      return true;
     } catch (error) {
       console.error("Error syncing cart:", error);
+      return false;
     }
   };
 

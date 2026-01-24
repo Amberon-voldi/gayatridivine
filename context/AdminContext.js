@@ -1,13 +1,13 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { account } from "@/lib/appwrite";
+import { account, client, OAuthProvider } from "@/lib/appwrite";
 
 const AdminContext = createContext();
 
 // Fallback admin emails (used if settings fail to load)
 export const ADMIN_EMAILS = [
-  "admin@gayataridivine.com",
+  "admin@gayatridivine.com",
   "ambujpandey742@gmail.com",
   "owner@gayataridivine.com",
 ];
@@ -19,30 +19,33 @@ export function AdminProvider({ children }) {
 
   useEffect(() => {
     (async () => {
-      await loadAllowedEmails();
-      await checkAdminSession();
+      const emails = await loadAllowedEmails();
+      await checkAdminSession(emails);
     })();
   }, []);
 
   const loadAllowedEmails = async () => {
+    let merged = ADMIN_EMAILS;
     try {
       const res = await fetch("/api/settings", { cache: "no-store" });
       const json = await res.json();
       const fromSettings = json?.settings?.admin?.adminEmails;
       if (Array.isArray(fromSettings) && fromSettings.length > 0) {
-        const merged = [...new Set([...ADMIN_EMAILS, ...fromSettings])];
-        setAllowedEmails(merged);
+        merged = [...new Set([...ADMIN_EMAILS, ...fromSettings])];
       }
     } catch {
       // ignore; keep fallback
     }
+
+    setAllowedEmails(merged);
+    return merged;
   };
 
-  const checkAdminSession = async () => {
+  const checkAdminSession = async (emails = allowedEmails) => {
     try {
       // Check if user is already logged in (from main auth or admin)
       const session = await account.get();
-      if (session && allowedEmails.includes(session.email)) {
+      if (session && emails.includes(session.email)) {
         // User is logged in and is an admin - grant access automatically
         setAdmin(session);
       } else {
@@ -58,45 +61,60 @@ export function AdminProvider({ children }) {
   // Re-check session when called (useful after main auth login)
   const refreshAdminStatus = async () => {
     setIsLoading(true);
-    await loadAllowedEmails();
-    await checkAdminSession();
+    const emails = await loadAllowedEmails();
+    await checkAdminSession(emails);
   };
 
-  const adminLogin = async (email, password) => {
+  const adminLoginWithGoogle = async () => {
     try {
+      if (typeof window === 'undefined') return { success: false, error: 'Browser required' };
+
+      // Make sure we have latest allowlist cached (used after redirect)
       await loadAllowedEmails();
-      if (!allowedEmails.includes(email)) {
-        return { success: false, error: "Unauthorized access" };
-      }
-      
-      // Try to get existing session first
-      try {
-        const existingSession = await account.get();
-        if (existingSession && allowedEmails.includes(existingSession.email)) {
-          setAdmin(existingSession);
-          return { success: true };
-        }
-        // If logged in with different account, log out first
-        if (existingSession) {
-          await account.deleteSession("current");
-        }
-      } catch (e) {
-        // No existing session, continue with login
-      }
-      
-      await account.createEmailPasswordSession(email, password);
-      const session = await account.get();
-      setAdmin(session);
+
+      // After OAuth callback, send back to admin.
+      sessionStorage.setItem('oauth_redirect', '/admin');
+
+      const origin = window.location.origin;
+      const success = `${origin}/auth/callback`;
+      const failure = `${origin}/admin/login?error=oauth_failed`;
+
+      account.createOAuth2Token({
+        provider: OAuthProvider.Google,
+        success,
+        failure,
+      });
+
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
     }
   };
 
+  // Back-compat (old email/password signature). Now uses Google login.
+  const adminLogin = async () => {
+    return adminLoginWithGoogle();
+  };
+
   const adminLogout = async () => {
     try {
-      await account.deleteSession("current");
+      await account.deleteSession({ sessionId: 'current' });
       setAdmin(null);
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('appwrite_session_id');
+        } catch {
+          // ignore
+        }
+      }
+
+      // Ensure subsequent calls don't keep sending an old session header
+      try {
+        client.setSession('');
+      } catch {
+        // ignore
+      }
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -110,6 +128,7 @@ export function AdminProvider({ children }) {
         isLoading,
         isAdmin: !!admin,
         adminLogin,
+        adminLoginWithGoogle,
         adminLogout,
         refreshAdminStatus,
         ADMIN_EMAILS,

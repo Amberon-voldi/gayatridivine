@@ -37,12 +37,13 @@ export function AuthProvider({ children }) {
       const failureUrl = typeof window !== 'undefined' ? `${window.location.origin}/login?error=oauth_failed` : '';
       
       console.log('Initiating OAuth with:', { successUrl, failureUrl });
-      
-      // createOAuth2Session with object parameters (SDK v21+)
-      account.createOAuth2Session({
+
+      // IMPORTANT: Use token-based OAuth flow to avoid third-party cookie reliance.
+      // Appwrite will redirect back with ?userId=...&secret=... which we exchange for a session.
+      account.createOAuth2Token({
         provider: OAuthProvider.Google,
         success: successUrl,
-        failure: failureUrl
+        failure: failureUrl,
       });
       
       return { success: true };
@@ -64,6 +65,13 @@ export function AuthProvider({ children }) {
       console.error("Logout error:", error);
     } finally {
       setUser(null);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('appwrite_session_id');
+        } catch {
+          // ignore
+        }
+      }
     }
   };
 
