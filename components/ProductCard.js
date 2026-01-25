@@ -23,8 +23,10 @@ export default function ProductCard({ product }) {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
+  const productPathId = product?.slug || product?.id;
+
   return (
-    <Link href={`/product/${product.id}`} className="group">
+    <Link href={`/product/${productPathId}`} className="group">
       <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-gray-100">
