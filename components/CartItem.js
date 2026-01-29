@@ -5,11 +5,12 @@ import Link from "next/link";
 
 export default function CartItem({ item }) {
   const { updateQuantity, removeFromCart } = useCart();
+  const productPathId = item?.slug || item?.id;
 
   return (
     <div className="flex items-center gap-4 py-4 border-b border-gray-200">
       {/* Image */}
-      <Link href={`/product/${item.id}`} className="shrink-0">
+      <Link href={`/product/${productPathId}`} className="shrink-0">
         <img
           src={item.image}
           alt={item.name}
@@ -19,7 +20,7 @@ export default function CartItem({ item }) {
 
       {/* Details */}
       <div className="flex-1 min-w-0">
-        <Link href={`/product/${item.id}`}>
+        <Link href={`/product/${productPathId}`}>
           <h3 className="text-sm sm:text-base font-medium text-gray-800 hover:text-red-600 transition-colors truncate">
             {item.name}
           </h3>

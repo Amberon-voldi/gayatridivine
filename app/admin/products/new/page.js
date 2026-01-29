@@ -8,6 +8,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import { createProduct } from "@/lib/products";
 import { listCategories } from "@/lib/categories";
 import { storage, BUCKETS, ID } from "@/lib/appwrite";
+import { slugify } from "@/lib/slug";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -18,8 +19,10 @@ export default function NewProductPage() {
   const [mainImagePreview, setMainImagePreview] = useState("");
   const mainImageUrlRef = useRef("");
   const [categories, setCategories] = useState([]);
+  const [slugTouched, setSlugTouched] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    slug: "",
     description: "",
     category: "product",
     price: "",
@@ -104,6 +107,15 @@ export default function NewProductPage() {
     };
   }, [isAdmin, isLoading]);
 
+  useEffect(() => {
+    if (slugTouched) return;
+    const nextSlug = slugify(formData.name);
+    setFormData((prev) => ({
+      ...prev,
+      slug: nextSlug,
+    }));
+  }, [formData.name, slugTouched]);
+
   if (isLoading || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -114,6 +126,7 @@ export default function NewProductPage() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === "slug") setSlugTouched(true);
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value
@@ -164,6 +177,7 @@ export default function NewProductPage() {
 
       const submission = {
         ...formData,
+        slug: slugify(formData.slug || formData.name),
         image: mainCandidate,
         images: mergedImages.length > 0 ? mergedImages : [""]
       };
@@ -211,6 +225,28 @@ export default function NewProductPage() {
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Slug (URL / ID) *
+                    </label>
+                    <input
+                      type="text"
+                      name="slug"
+                      value={formData.slug}
+                      onChange={(e) => {
+                        const next = slugify(e.target.value);
+                        setSlugTouched(true);
+                        setFormData((prev) => ({ ...prev, slug: next }));
+                      }}
+                      required
+                      spellCheck={false}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Auto-generated from product name. You can edit it before saving.
+                    </p>
                   </div>
 
                   <div className="md:col-span-2">

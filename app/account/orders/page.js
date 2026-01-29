@@ -101,7 +101,10 @@ export default function OrdersPage() {
                         className="w-20 h-20 object-cover rounded-lg"
                       />
                       <div className="flex-1">
-                        <Link href={`/product/${item.id}`} className="font-medium text-gray-900 hover:text-red-600">
+                        <Link
+                          href={`/product/${item.slug || item.id}`}
+                          className="font-medium text-gray-900 hover:text-red-600"
+                        >
                           {item.name}
                         </Link>
                         {item.selectedColor && (

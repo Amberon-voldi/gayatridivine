@@ -30,7 +30,10 @@ export default function ProductClient({ productId, initialProduct = null }) {
     const load = async () => {
       try {
         setLoadError("");
-        let p = initialProduct && initialProduct.id === productId ? initialProduct : null;
+        let p =
+          initialProduct && (initialProduct.id === productId || initialProduct.slug === productId)
+            ? initialProduct
+            : null;
 
         if (!p) {
           setLoading(true);

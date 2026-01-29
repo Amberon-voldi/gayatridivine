@@ -32,10 +32,12 @@ export async function generateMetadata({ params }) {
   const baseUrl = getBaseUrl();
   const unwrappedParams = await params;
   const productId = unwrappedParams?.id;
-  const url = `${baseUrl}/product/${encodeURIComponent(productId || "")}`;
+  const fallbackUrl = `${baseUrl}/product/${encodeURIComponent(productId || "")}`;
 
   try {
     const product = await getProduct(productId);
+    const canonicalId = product?.slug || product?.id || productId;
+    const url = `${baseUrl}/product/${encodeURIComponent(canonicalId || "")}`;
     const title = product?.name ? `${product.name} | Gayatri Divine` : "Product | Gayatri Divine";
     const description =
       toPlainTextDescription(product?.description) ||
@@ -71,8 +73,8 @@ export async function generateMetadata({ params }) {
       metadataBase: new URL(baseUrl),
       title: "Product | Gayatri Divine",
       description: "Browse products.",
-      alternates: { canonical: url },
-      openGraph: { url, type: "website" },
+      alternates: { canonical: fallbackUrl },
+      openGraph: { url: fallbackUrl, type: "website" },
       twitter: { card: "summary" },
     };
   }

@@ -8,6 +8,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import { getProduct, updateProduct } from "@/lib/products";
 import { listCategories } from "@/lib/categories";
 import { storage, BUCKETS, ID } from "@/lib/appwrite";
+import { slugify } from "@/lib/slug";
 
 export default function EditProductPage({ params }) {
   const router = useRouter();
@@ -88,6 +89,7 @@ export default function EditProductPage({ params }) {
         if (cancelled) return;
         setFormData({
           ...product,
+          slug: product.slug || slugify(product.name) || "",
           images: product.images || (product.image ? [product.image] : [""]),
           colors: product.colors || [""],
           features: product.features || [""],
@@ -262,6 +264,24 @@ export default function EditProductPage({ params }) {
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Slug (URL / ID)
+                    </label>
+                    <input
+                      type="text"
+                      name="slug"
+                      value={formData.slug || ""}
+                      readOnly
+                      disabled
+                      spellCheck={false}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Slug is locked after creation.
+                    </p>
                   </div>
 
                   <div className="md:col-span-2">
