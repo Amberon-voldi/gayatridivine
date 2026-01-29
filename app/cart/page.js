@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import CartItem from "@/components/CartItem";
@@ -7,23 +8,51 @@ import CartItem from "@/components/CartItem";
 export default function CartPage() {
   const { cart, getCartTotal, clearCart, isLoaded } = useCart();
 
-  if (!isLoaded) {
+  const [settings, setSettings] = useState(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const controller = new AbortController();
+
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings", { signal: controller.signal });
+        const data = await res.json();
+        if (mounted && data?.success && data?.settings) {
+          setSettings(data.settings);
+        }
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          console.error("Failed to fetch settings:", error);
+        }
+      } finally {
+        if (mounted) setSettingsLoaded(true);
+      }
+    };
+
+    fetchSettings();
+
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
+  }, []);
+
+  if (!isLoaded || !settingsLoaded) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-32 mb-8"></div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex items-center justify-center">
+          <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin" aria-label="Loading" />
         </div>
       </div>
     );
   }
 
   const subtotal = getCartTotal();
-  const shipping = subtotal > 1500 ? 0 : 99;
+  const freeShippingThreshold = settings?.shipping?.freeShippingThreshold ?? 1500;
+  const standardShippingRate = settings?.shipping?.standardShippingRate ?? 99;
+  const shipping = subtotal >= freeShippingThreshold ? 0 : standardShippingRate;
   const total = subtotal + shipping;
 
   return (
@@ -88,9 +117,9 @@ export default function CartPage() {
                   <span>Shipping</span>
                   <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
                 </div>
-                {subtotal > 0 && subtotal < 1500 && (
+                {subtotal > 0 && subtotal < freeShippingThreshold && (
                   <p className="text-sm text-green-600">
-                    Add ₹{(1500 - subtotal).toLocaleString()} more for free shipping!
+                    Add ₹{(freeShippingThreshold - subtotal).toLocaleString()} more for free shipping!
                   </p>
                 )}
                 <div className="border-t pt-3">

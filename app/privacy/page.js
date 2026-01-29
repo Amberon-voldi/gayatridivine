@@ -118,9 +118,9 @@ export default function PrivacyPage() {
             If you have any questions about this Privacy Policy, please contact us:
           </p>
           <ul className="text-gray-600 space-y-2">
-            <li><strong>Email:</strong> privacy@gayatridivine.com</li>
-            <li><strong>Phone:</strong> +91 98765 43210</li>
-            <li><strong>Address:</strong> 123 Fashion Street, Mumbai, Maharashtra 400001</li>
+            <li><strong>Email:</strong> gayatridivinestores@gmail.com</li>
+            <li><strong>Phone:</strong> +91 9319918797, +91 9717029339</li>
+            <li><strong>Address:</strong> 954, Badarpur New Delhi 110044</li>
           </ul>
         </section>
       </div>

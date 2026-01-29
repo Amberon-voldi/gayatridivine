@@ -56,6 +56,25 @@ export default function SupportPage() {
             For order status, shipping updates, or returns, please include your order number when you contact us.
           </p>
         </div>
+        <div className="mt-6 rounded-xl border border-gray-200 p-5">
+          <h2 className="font-semibold text-gray-900">Product questions</h2>
+          <div className="mt-3 text-sm text-gray-600 space-y-3">
+            <details className="bg-white rounded-lg p-3">
+              <summary className="font-medium cursor-pointer">What kinds of products do you sell?</summary>
+              <p className="mt-2">We specialize in spiritual and ritual items such as rudraksha beads, yantras, japa (mantra) malas, prayer beads, and related accessories. We do not sell wallets or general fashion accessories.</p>
+            </details>
+
+            <details className="bg-white rounded-lg p-3">
+              <summary className="font-medium cursor-pointer">Are your spiritual items authentic?</summary>
+              <p className="mt-2">Yes — we source items from trusted suppliers. Product pages include details about origin, material, and authenticity where available.</p>
+            </details>
+
+            <details className="bg-white rounded-lg p-3">
+              <summary className="font-medium cursor-pointer">How should I care for these items?</summary>
+              <p className="mt-2">Keep items clean and dry, avoid harsh chemicals, and store them in a cloth bag or box. Follow care instructions on each product page.</p>
+            </details>
+          </div>
+        </div>
       </div>
     </div>
   );

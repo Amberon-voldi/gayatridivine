@@ -167,9 +167,7 @@ export default function ReturnsPage() {
             <Link href="/contact" className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors">
               Contact Us
             </Link>
-            <a href="tel:+919876543210" className="px-6 py-2 border border-red-600 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors">
-              Call: +91 98765 43210
-            </a>
+            
           </div>
         </section>
       </div>

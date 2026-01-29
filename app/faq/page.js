@@ -48,20 +48,20 @@ export default function FAQPage() {
       category: "Products",
       questions: [
         {
-          q: "Are your products genuine leather?",
-          a: "We offer both genuine leather and high-quality vegan leather options. Each product page clearly mentions the material used."
+          q: "What kinds of products do you sell?",
+          a: "We specialize in spiritual and ritual items such as rudraksha beads, yantras, japa (mantra) malas, prayer beads, and related accessories. We do not sell wallets or general fashion accessories."
         },
         {
-          q: "How do I care for my leather product?",
-          a: "Keep leather products away from direct sunlight and moisture. Use a soft cloth for cleaning and apply leather conditioner occasionally for longevity."
+          q: "Are your spiritual items authentic?",
+          a: "Yes — we source authentic rudraksha and yantras from trusted suppliers. Each product page includes details about origin, material, and authenticity where available."
         },
         {
-          q: "Do your products come with warranty?",
-          a: "All our products come with a 6-month warranty against manufacturing defects. This doesn't cover normal wear and tear or damage caused by misuse."
+          q: "How should I care for my rudraksha, mala, or yantra?",
+          a: "Keep these items clean and dry, avoid harsh chemicals, and store them in a clean cloth bag or box. For metal yantras, avoid prolonged moisture and wipe gently to preserve finish. Follow any care instructions on the product page."
         },
         {
-          q: "Are the product colors accurate?",
-          a: "We try our best to display accurate colors. However, colors may vary slightly due to different screen settings. Check multiple product images for better understanding."
+          q: "Do your items include certification or purity information?",
+          a: "Many of our products include origin, material, and purity information. Where applicable, we provide certificates or detailed notes on the product page to help you make an informed choice."
         }
       ]
     },
@@ -175,9 +175,7 @@ export default function FAQPage() {
           <Link href="/contact" className="px-6 py-3 bg-white text-red-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
             Contact Support
           </Link>
-          <a href="tel:+919876543210" className="px-6 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors">
-            Call Us
-          </a>
+         
         </div>
       </div>
     </div>

@@ -59,13 +59,13 @@ export default function OrdersPage() {
       {orders.length > 0 ? (
         <div className="space-y-6">
           {orders.map(order => (
-            <div key={order.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div key={order.$id || order.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
               {/* Order Header */}
               <div className="bg-gray-50 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Order Placed</p>
                   <p className="font-medium">
-                    {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                    {new Date(order.createdAt || order.$createdAt).toLocaleDateString("en-IN", {
                       day: "numeric",
                       month: "long",
                       year: "numeric"
@@ -118,9 +118,14 @@ export default function OrdersPage() {
                 <div className="mt-6 pt-6 border-t">
                   <h3 className="font-medium text-gray-900 mb-2">Shipping Address</h3>
                   <p className="text-gray-600">
-                    {order.shippingAddress.firstName} {order.shippingAddress.lastName}<br />
-                    {order.shippingAddress.address}<br />
-                    {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
+                    {(order.shippingAddress?.name) ||
+                      (order.shippingAddress?.firstName && order.shippingAddress?.lastName
+                        ? `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}`
+                        : order.shippingAddress?.firstName || order.shippingAddress?.lastName || order.customerName || "Customer")}
+                    <br />
+                    {order.shippingAddress?.address}
+                    <br />
+                    {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
                   </p>
                 </div>
 

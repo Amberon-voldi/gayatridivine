@@ -83,10 +83,25 @@ export function AuthProvider({ children }) {
       if (updates.email && updates.password) {
         await account.updateEmail({ email: updates.email, password: updates.password });
       }
-      // Update phone in prefs since we can't directly update phone with OAuth
-      if (updates.phone) {
-        await account.updatePrefs({ prefs: { phone: updates.phone } });
+      // Merge prefs (avoid overwriting existing prefs like phoneVerified).
+      const wantsPrefsUpdate =
+        updates.phone ||
+        typeof updates.phoneVerified === "boolean" ||
+        (updates.prefs && Object.keys(updates.prefs).length > 0);
+
+      if (wantsPrefsUpdate) {
+        const current = await account.get();
+        const existingPrefs = current?.prefs || {};
+        const nextPrefs = {
+          ...existingPrefs,
+          ...(updates.prefs || {}),
+          ...(updates.phone ? { phone: updates.phone } : {}),
+          ...(typeof updates.phoneVerified === "boolean" ? { phoneVerified: updates.phoneVerified } : {}),
+        };
+
+        await account.updatePrefs({ prefs: nextPrefs });
       }
+
       const updatedUser = await account.get();
       setUser(updatedUser);
       return { success: true };
@@ -103,7 +118,7 @@ export function AuthProvider({ children }) {
       const response = await databases.listDocuments({
         databaseId: DATABASE_ID,
         collectionId: COLLECTIONS.ADDRESSES,
-        queries: [Query.equal("userId", user.$id)]
+        queries: [Query.equal("userId", user.$id), Query.orderDesc("$createdAt")]
       });
       return response.documents;
     } catch (error) {
@@ -171,11 +186,12 @@ export function AuthProvider({ children }) {
         collectionId: COLLECTIONS.ORDERS,
         queries: [
           Query.equal("userId", user.$id),
-          Query.orderDesc("createdAt")
+          Query.orderDesc("$createdAt")
         ]
       });
       return response.documents.map(doc => ({
         ...doc,
+        createdAt: doc.createdAt || doc.$createdAt,
         items: JSON.parse(doc.items),
         shippingAddress: JSON.parse(doc.shippingAddress),
         // Include shipment tracking fields
@@ -194,32 +210,57 @@ export function AuthProvider({ children }) {
     if (!user) return { success: false, error: "Not authenticated" };
     try {
       const orderNumber = `GD${Date.now()}`;
-      const newOrder = await databases.createDocument({
-        databaseId: DATABASE_ID,
-        collectionId: COLLECTIONS.ORDERS,
-        documentId: ID.unique(),
-        data: {
-          userId: user.$id,
-          orderNumber,
-          customerName: orderData.customerName || "",
-          items: JSON.stringify(orderData.items),
-          subtotal: orderData.subtotal,
-          shipping: orderData.shipping,
-          total: orderData.total,
-          status: "confirmed",
-          paymentMethod: orderData.paymentMethod,
-          shippingAddress: JSON.stringify(orderData.shippingAddress),
-          contactEmail: orderData.contactEmail,
-          contactPhone: orderData.contactPhone || "",
-          createdAt: new Date().toISOString()
-        }
-      });
+      const createdAt = new Date().toISOString();
+      const baseData = {
+        userId: user.$id,
+        orderNumber,
+        customerName: orderData.customerName || "",
+        items: JSON.stringify(orderData.items),
+        subtotal: orderData.subtotal,
+        shipping: orderData.shipping,
+        total: orderData.total,
+        status: "confirmed",
+        paymentMethod: orderData.paymentMethod,
+        shippingAddress: JSON.stringify(orderData.shippingAddress),
+        contactEmail: orderData.contactEmail,
+        contactPhone: orderData.contactPhone || "",
+        createdAt,
+      };
+
+      // Optional fields: if the Appwrite collection doesn't have these attributes,
+      // the first createDocument call will fail and we'll retry with baseData.
+      const extendedData = {
+        ...baseData,
+        paymentStatus: orderData.paymentStatus,
+        razorpayPaymentId: orderData.razorpayPaymentId,
+        razorpayOrderId: orderData.razorpayOrderId,
+      };
+
+      let newOrder;
+      try {
+        newOrder = await databases.createDocument({
+          databaseId: DATABASE_ID,
+          collectionId: COLLECTIONS.ORDERS,
+          documentId: ID.unique(),
+          data: extendedData,
+        });
+      } catch (error) {
+        console.warn("Order create failed with extended fields; retrying with base fields.", error);
+        newOrder = await databases.createDocument({
+          databaseId: DATABASE_ID,
+          collectionId: COLLECTIONS.ORDERS,
+          documentId: ID.unique(),
+          data: baseData,
+        });
+      }
+
       return { 
         success: true, 
         order: {
           ...newOrder,
           items: orderData.items,
-          shippingAddress: orderData.shippingAddress
+          shippingAddress: orderData.shippingAddress,
+          createdAt: newOrder.createdAt || newOrder.$createdAt
         }
       };
     } catch (error) {

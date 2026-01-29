@@ -16,7 +16,17 @@ import {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, getCartTotal, clearCart, isLoaded: cartLoaded } = useCart();
-  const { user, isAuthenticated, addOrder, updateProfile, login, isLoaded: authLoaded } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    addOrder,
+    updateProfile,
+    login,
+    getAddresses,
+    addAddress,
+    updateAddress,
+    isLoaded: authLoaded,
+  } = useAuth();
 
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -24,7 +34,11 @@ export default function CheckoutPage() {
   const [orderDetails, setOrderDetails] = useState(null);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [settings, setSettings] = useState(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [addressLoaded, setAddressLoaded] = useState(false);
+  const [savedAddressId, setSavedAddressId] = useState(null);
+  const [addressTouched, setAddressTouched] = useState(false);
 
   const [phoneVerification, setPhoneVerification] = useState({
     verified: false,
@@ -61,7 +75,7 @@ export default function CheckoutPage() {
     // Default form data
     return {
       email: user?.email || "",
-      phone: formatIndianPhoneForInput(user?.phone || ""),
+      phone: formatIndianPhoneForInput(user?.prefs?.phone || user?.phone || ""),
       name: user?.name || "",
       address: "",
       city: "",
@@ -86,9 +100,12 @@ export default function CheckoutPage() {
 
   // Fetch settings on mount
   useEffect(() => {
+    let mounted = true;
+    const controller = new AbortController();
+
     const fetchSettings = async () => {
       try {
-        const res = await fetch("/api/settings");
+        const res = await fetch("/api/settings", { signal: controller.signal });
         const data = await res.json();
         if (data.success && data.settings) {
           setSettings(data.settings);
@@ -100,13 +117,40 @@ export default function CheckoutPage() {
           }
         }
       } catch (error) {
-        console.error("Failed to fetch settings:", error);
+        if (error?.name !== "AbortError") {
+          console.error("Failed to fetch settings:", error);
+        }
+      } finally {
+        if (mounted) setSettingsLoaded(true);
       }
     };
     fetchSettings();
+
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
   }, []);
 
-  const otpRequired = !!(settings?.otp?.enabled && settings?.otp?.requireOnCheckout);
+  const getUserPref = (key) => {
+    const prefs = user?.prefs || {};
+    return prefs?.[key] ?? prefs?.[key?.toLowerCase?.()] ?? prefs?.[key?.toUpperCase?.()];
+  };
+
+  const savedVerifiedPhone = digitsOnly(String(getUserPref("phone") || user?.phone || ""));
+  const phoneVerifiedFlag = !!getUserPref("phoneVerified");
+  const formPhoneDigits = digitsOnly(String(formData.phone || ""));
+  const isUsingVerifiedPhone = !!(phoneVerifiedFlag && savedVerifiedPhone && formPhoneDigits === savedVerifiedPhone);
+  const otpRequired = !!(settings?.otp?.enabled && settings?.otp?.requireOnCheckout && !isUsingVerifiedPhone);
+
+  const isAddressComplete = (data) => {
+    return !!(
+      String(data?.address || "").trim() &&
+      String(data?.city || "").trim() &&
+      String(data?.state || "").trim() &&
+      !validatePincode6(data?.pincode)
+    );
+  };
 
   const normalizePhoneForMsg91 = (phone) => {
     const raw = String(phone || "").trim();
@@ -240,7 +284,74 @@ export default function CheckoutPage() {
         error: "",
       }));
     }
+
+    if (name === "address" || name === "city" || name === "state" || name === "pincode") {
+      setAddressTouched(true);
+    }
   };
+
+  // Load latest saved address for the user and auto-fill Shipping step.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setAddressLoaded(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const list = await getAddresses();
+        const first = Array.isArray(list) && list.length > 0 ? list[0] : null;
+        if (cancelled) return;
+
+        if (first) {
+          setSavedAddressId(first.$id || first.id || null);
+
+          // Only auto-fill if the user hasn't started editing address.
+          setFormData((prev) => {
+            if (addressTouched) return prev;
+            return {
+              ...prev,
+              name: prev.name || first.fullName || prev.name,
+              address: first.addressLine1 || prev.address,
+              city: first.city || prev.city,
+              state: first.state || prev.state,
+              pincode: first.pincode || prev.pincode,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to load saved address:", err?.message || err);
+      } finally {
+        if (!cancelled) setAddressLoaded(true);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+    // Intentionally exclude addressTouched/formData to avoid re-filling while user edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, getAddresses]);
+
+  // If phone is already verified, skip OTP requirement (no auto-advance).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (step !== 1) return;
+    if (!isUsingVerifiedPhone) return;
+
+    setPhoneVerification((prev) => ({
+      ...prev,
+      verified: true,
+      reqId: null,
+      otp: "",
+      message: "Phone already verified.",
+      error: "",
+    }));
+  }, [isAuthenticated, step, isUsingVerifiedPhone]);
 
   // Auto-send OTP once phone becomes valid (reduces clicks).
   useEffect(() => {
@@ -369,6 +480,16 @@ export default function CheckoutPage() {
         message: "Phone number verified.",
         error: "",
       }));
+
+      // Persist verified phone in Appwrite prefs so future checkouts can skip OTP.
+      if (isAuthenticated) {
+        updateProfile({
+          phone: digitsOnly(formData.phone),
+          phoneVerified: true,
+        }).catch((err) => console.warn("Phone prefs update skipped:", err?.message || err));
+      }
+
+      // Do not auto-advance steps; user can click continue.
     } catch (err) {
       setPhoneVerification((prev) => ({
         ...prev,
@@ -391,7 +512,7 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: total,
+          amount: 1,
           currency: "INR",
           receipt: `order_${Date.now()}`
         })
@@ -428,7 +549,8 @@ export default function CheckoutPage() {
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: razorpayOrder.amount,
+        // amount: razorpayOrder.amount,
+        amount: 100, // in paise
         currency: razorpayOrder.currency,
         name: "Gayatri Divine",
         description: "Purchase from Gayatri Divine",
@@ -442,7 +564,11 @@ export default function CheckoutPage() {
           });
 
           if (verification.success) {
-            await completeOrder("razorpay", response.razorpay_payment_id);
+            await completeOrder("razorpay", response.razorpay_payment_id, {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
           } else {
             alert("Payment verification failed. Please contact support.");
             setIsProcessing(false);
@@ -479,7 +605,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const completeOrder = async (paymentMethod, paymentId = null) => {
+  const completeOrder = async (paymentMethod, paymentId = null, paymentMeta = null) => {
     const order = {
       items: cart,
       total,
@@ -498,14 +624,24 @@ export default function CheckoutPage() {
       contactPhone: formData.phone,
       paymentMethod,
       paymentId,
-      paymentStatus: paymentMethod === "cod" ? "pending" : "paid"
+      paymentStatus: paymentMethod === "cod" ? "pending" : "paid",
+      razorpayOrderId: paymentMeta?.razorpayOrderId || null,
+      razorpayPaymentId: paymentMeta?.razorpayPaymentId || null,
+      razorpaySignature: paymentMeta?.razorpaySignature || null,
     };
 
     if (isAuthenticated) {
       const result = await addOrder(order);
-      if (result.success) {
-        setOrderDetails(result.order);
+      if (!result?.success) {
+        const msg = result?.error || "Order creation failed";
+        console.error("Order creation failed after successful payment:", msg);
+        alert(
+          `Payment was successful, but we couldn't create your order. Please contact support with Payment ID: ${paymentId || ""}.\n\nError: ${msg}`
+        );
+        setIsProcessing(false);
+        return;
       }
+      setOrderDetails(result.order);
     } else {
       setOrderDetails({
         ...order,
@@ -548,7 +684,7 @@ export default function CheckoutPage() {
       if (step === 1 && isAuthenticated) {
         updateProfile({
           name: formData.name,
-          phone: formData.phone,
+          // phone is saved only after OTP verification (or if already verified)
         }).catch((err) => console.warn("Profile update skipped:", err?.message || err));
       }
 
@@ -570,6 +706,36 @@ export default function CheckoutPage() {
           setFieldErrors((prev) => ({ ...prev, pincode: pincodeError }));
           return;
         }
+
+        // Persist address (create once, then update on later checkouts).
+        if (isAuthenticated) {
+          const payload = {
+            fullName: formData.name,
+            phone: digitsOnly(formData.phone),
+            addressLine1: formData.address,
+            addressLine2: "",
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            isDefault: true,
+          };
+
+          try {
+            if (savedAddressId) {
+              await updateAddress(savedAddressId, payload);
+            } else {
+              const res = await addAddress(payload);
+              if (res?.success && res?.address) {
+                setSavedAddressId(res.address.$id || res.address.id || null);
+              }
+            }
+            setAddressTouched(false);
+          } catch (err) {
+            console.error("Failed to save address:", err);
+            alert("Could not save your address. Please try again.");
+            return;
+          }
+        }
       }
 
       setStep(step + 1);
@@ -585,12 +751,11 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!cartLoaded || !authLoaded) {
+  if (!cartLoaded || !authLoaded || !settingsLoaded) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-32 mb-8"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex items-center justify-center">
+          <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin" aria-label="Loading" />
         </div>
       </div>
     );
