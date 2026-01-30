@@ -165,8 +165,8 @@ export default function ContactPage() {
               a: "Currently, we ship within India only. International shipping coming soon!"
             },
             {
-              q: "Are your products genuine leather?",
-              a: "We offer both genuine leather and high-quality vegan leather options. Check product descriptions for details."
+              q: "What kinds of products do you sell?",
+              a: "We specialize in spiritual and ritual items such as rudraksha beads, yantras, japa (mantra) malas, prayer beads, and related accessories. We do not sell wallets or general fashion accessories."
             }
           ].map((faq, index) => (
             <div key={index} className="bg-white rounded-xl shadow-sm p-6">
