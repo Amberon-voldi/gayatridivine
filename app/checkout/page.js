@@ -512,7 +512,7 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: 1,
+          amount: total , // in paise
           currency: "INR",
           receipt: `order_${Date.now()}`
         })
@@ -549,8 +549,8 @@ export default function CheckoutPage() {
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        // amount: razorpayOrder.amount,
-        amount: 100, // in paise
+         amount: razorpayOrder.amount
+        ,
         currency: razorpayOrder.currency,
         name: "Gayatri Divine",
         description: "Purchase from Gayatri Divine",
