@@ -19,8 +19,7 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    // Per Razorpay Magic Checkout docs: respond quickly with serviceability info.
-    // For now respond that all addresses are serviceable and have zero shipping fee.
+
     const responseAddresses = addresses.map((addr) =>
       buildShippingMethodsResponse({
         addressId: String(addr.id ?? "0"),
