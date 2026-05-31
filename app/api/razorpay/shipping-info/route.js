@@ -24,9 +24,9 @@ export async function POST(request) {
       buildShippingMethodsResponse({
         addressId: addr.id ?? "0",
         zipcode: addr.zipcode ?? "",
-        shippingPaise: 0,
+        shippingPaise: 1000,
         codAllowed: false,
-        codFeePaise: 0,
+        codFeePaise: 1000,
       }).addresses[0]
     );
 
