@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import CartItem from "@/components/CartItem";
+import MagicCheckoutButton from "@/components/MagicCheckoutButton";
 
 export default function CartPage() {
   const { cart, getCartTotal, clearCart, isLoaded } = useCart();
@@ -130,12 +131,24 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <Link
-                href="/checkout"
-                className="w-full block text-center py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Proceed to Checkout
-              </Link>
+              {settings?.payment?.razorpayEnabled ? (
+                <MagicCheckoutButton
+                  cart={cart}
+                  settings={settings}
+                  razorpayKeyId={
+                    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+                    settings?.payment?.razorpayKeyId
+                  }
+                  label="Pay with Magic Checkout"
+                />
+              ) : (
+                <Link
+                  href="/checkout"
+                  className="w-full block text-center py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Proceed to Checkout
+                </Link>
+              )}
 
               <Link
                 href="/"

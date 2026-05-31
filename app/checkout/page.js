@@ -554,6 +554,7 @@ export default function CheckoutPage() {
         currency: razorpayOrder.currency,
         name: "Gayatri Divine",
         description: "Purchase from Gayatri Divine",
+        one_click_checkout: true,
         image: "/logo.png",
         order_id: razorpayOrder.id,
         handler: async function (response) {
