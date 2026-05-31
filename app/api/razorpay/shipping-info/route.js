@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request) {
   try {
     const body = await request.json();
+    console.log("[shipping-info] incoming body:", JSON.stringify(body));
     const addresses = body.addresses || [];
     if (addresses.length === 0) {
       return NextResponse.json(
@@ -24,11 +25,13 @@ export async function POST(request) {
       buildShippingMethodsResponse({
         addressId: addr.id ?? "0",
         zipcode: addr.zipcode ?? "",
-        shippingPaise: 1000,
+        shippingPaise: 0,
         codAllowed: false,
-        codFeePaise: 1000,
+        codFeePaise: 0,
       }).addresses[0]
     );
+
+    console.log("[shipping-info] responseAddresses:", JSON.stringify(responseAddresses));
 
     return NextResponse.json({ addresses: responseAddresses });
   } catch (error) {

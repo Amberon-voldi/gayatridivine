@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request) {
   try {
     const orderId = request.nextUrl.searchParams.get("orderId");
+    console.log("[fetch-order] requested orderId:", orderId);
     if (!orderId) {
       return NextResponse.json(
         { success: false, error: "orderId is required" },
@@ -16,6 +17,8 @@ export async function GET(request) {
 
     const razorpay = getRazorpayClient();
     const order = await razorpay.orders.fetch(orderId);
+
+    console.log("[fetch-order] fetched order id:", order?.id, "status:", order?.status);
 
     return NextResponse.json({ success: true, order });
   } catch (error) {

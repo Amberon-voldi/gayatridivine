@@ -11,7 +11,9 @@ export const dynamic = "force-dynamic";
 export async function POST(request) {
   try {
     const body = await request.json();
+    console.log("[create-order] incoming body:", JSON.stringify(body));
     const settings = await getStoreSettings();
+    console.log("[create-order] store settings loaded:", !!settings);
 
     if (!settings?.payment?.razorpayEnabled) {
       return NextResponse.json(
@@ -37,6 +39,7 @@ export async function POST(request) {
         shippingSettings: settings.shipping,
         paymentSettings: settings.payment,
       });
+      console.log("[create-order] built payload meta:", payload.meta);
 
       const order = await razorpay.orders.create({
         amount: payload.amount,
@@ -46,6 +49,8 @@ export async function POST(request) {
         line_items: payload.line_items,
         notes: payload.notes,
       });
+
+      console.log("[create-order] razorpay order created:", order?.id);
 
       return NextResponse.json({
         success: true,
@@ -67,6 +72,8 @@ export async function POST(request) {
       currency,
       receipt,
     });
+
+    console.log("[create-order] razorpay simple order created:", order?.id);
 
     return NextResponse.json({ success: true, order });
   } catch (error) {

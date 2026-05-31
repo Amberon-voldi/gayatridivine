@@ -30,6 +30,7 @@ export default function MagicCheckoutButton({
   const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
   const verifyPayment = async (paymentData) => {
+    console.log("[MagicCheckout] verifyPayment payload:", paymentData);
     const response = await fetch("/api/razorpay/verify-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -39,6 +40,7 @@ export default function MagicCheckoutButton({
   };
 
   const fetchRazorpayOrder = async (orderId) => {
+    console.log("[MagicCheckout] fetching razorpay order:", orderId);
     const response = await fetch(
       `/api/razorpay/fetch-order?orderId=${encodeURIComponent(orderId)}`
     );
@@ -48,6 +50,7 @@ export default function MagicCheckoutButton({
   };
 
   const persistOrder = async (localOrder) => {
+    console.log("[MagicCheckout] persisting order, isAuthenticated:", isAuthenticated, "order:", localOrder);
     if (isAuthenticated) {
       const result = await addOrder(localOrder);
       if (!result?.success) {
@@ -78,17 +81,20 @@ export default function MagicCheckoutButton({
 
   const handlePaymentSuccess = useCallback(
     async (response, cartSnapshot) => {
+      console.log("[MagicCheckout] payment handler response:", response);
       const verification = await verifyPayment({
         razorpay_order_id: response.razorpay_order_id,
         razorpay_payment_id: response.razorpay_payment_id,
         razorpay_signature: response.razorpay_signature,
       });
 
+      console.log("[MagicCheckout] verification result:", verification);
       if (!verification.success) {
         throw new Error("Payment verification failed");
       }
 
       const razorpayOrder = await fetchRazorpayOrder(response.razorpay_order_id);
+      console.log("[MagicCheckout] fetched razorpay order:", razorpayOrder?.id);
       const localOrder = mapRazorpayOrderToLocalOrder({
         razorpayOrder,
         cart: cartSnapshot,
@@ -102,6 +108,7 @@ export default function MagicCheckoutButton({
       });
 
       const saved = await persistOrder(localOrder);
+      console.log("[MagicCheckout] order saved:", saved?.orderNumber || saved?.id || "guest");
       clearCart();
       const orderNumber = saved?.orderNumber || `GD${Date.now()}`;
       router.push(

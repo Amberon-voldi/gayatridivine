@@ -508,6 +508,7 @@ export default function CheckoutPage() {
 
   const createRazorpayOrder = async () => {
     try {
+      console.log("[checkout] createRazorpayOrder - request amount/cart", { total });
       const response = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -518,6 +519,7 @@ export default function CheckoutPage() {
         })
       });
       const data = await response.json();
+      console.log("[checkout] create-order response:", data?.order?.id || data);
       if (data.success) {
         return data.order;
       }
@@ -530,6 +532,7 @@ export default function CheckoutPage() {
 
   const verifyPayment = async (paymentData) => {
     try {
+      console.log("[checkout] verifyPayment payload:", paymentData);
       const response = await fetch("/api/razorpay/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -558,13 +561,17 @@ export default function CheckoutPage() {
         image: "/logo.png",
         order_id: razorpayOrder.id,
         handler: async function (response) {
+          console.log("[checkout] razorpay handler response:", response);
           const verification = await verifyPayment({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature
           });
 
+          console.log("[checkout] verify result:", verification);
+
           if (verification.success) {
+            console.log("[checkout] verification succeeded, completing order");
             await completeOrder("razorpay", response.razorpay_payment_id, {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,

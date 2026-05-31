@@ -209,6 +209,7 @@ export function AuthProvider({ children }) {
   const addOrder = async (orderData) => {
     if (!user) return { success: false, error: "Not authenticated" };
     try {
+      console.log("[AuthContext] addOrder called for user:", user?.$id, "orderData:", orderData);
       const orderNumber = `GD${Date.now()}`;
       const createdAt = new Date().toISOString();
       const baseData = {
@@ -238,20 +239,23 @@ export function AuthProvider({ children }) {
 
       let newOrder;
       try {
+        console.log("[AuthContext] creating order document with extended fields");
         newOrder = await databases.createDocument({
           databaseId: DATABASE_ID,
           collectionId: COLLECTIONS.ORDERS,
           documentId: ID.unique(),
           data: extendedData,
         });
+        console.log("[AuthContext] createDocument returned id:", newOrder?.$id || newOrder?.id);
       } catch (error) {
-        console.warn("Order create failed with extended fields; retrying with base fields.", error);
+        console.warn("[AuthContext] Order create failed with extended fields; retrying with base fields.", error?.message || error);
         newOrder = await databases.createDocument({
           databaseId: DATABASE_ID,
           collectionId: COLLECTIONS.ORDERS,
           documentId: ID.unique(),
           data: baseData,
         });
+        console.log("[AuthContext] createDocument retry returned id:", newOrder?.$id || newOrder?.id);
       }
 
       return { 

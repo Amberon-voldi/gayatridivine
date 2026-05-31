@@ -19,17 +19,19 @@ export async function POST(request) {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await request.json();
 
-    
+    console.log("[verify-payment] received:", { razorpay_order_id, razorpay_payment_id, razorpay_signature });
+
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", keySecret)
       .update(body.toString())
       .digest("hex");
 
-    // Verify signature
     const isAuthentic = expectedSignature === razorpay_signature;
+    console.log("[verify-payment] expectedSignature:", expectedSignature, "isAuthentic:", isAuthentic);
 
     if (isAuthentic) {
+      console.log("[verify-payment] payment verified for order:", razorpay_order_id);
       return NextResponse.json({
         success: true,
         message: "Payment verified successfully",
@@ -37,6 +39,7 @@ export async function POST(request) {
         orderId: razorpay_order_id,
       });
     } else {
+      console.warn("[verify-payment] signature mismatch for order:", razorpay_order_id);
       return NextResponse.json(
         { success: false, error: "Payment verification failed" },
         { status: 400 }
