@@ -23,8 +23,8 @@ export async function POST(request) {
     // For now respond that all addresses are serviceable and have zero shipping fee.
     const responseAddresses = addresses.map((addr) =>
       buildShippingMethodsResponse({
-        addressId: addr.id ?? "0",
-        zipcode: addr.zipcode ?? "",
+        addressId: String(addr.id ?? "0"),
+        zipcode: String(addr.zipcode ?? ""),
         shippingPaise: 0,
         codAllowed: false,
         codFeePaise: 0,
