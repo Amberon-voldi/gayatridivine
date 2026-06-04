@@ -24,7 +24,7 @@ export async function POST(request) {
       const resp = buildShippingMethodsResponse({
         addressId: String(addr.id ?? "0"),
         zipcode: String(addr.zipcode ?? ""),
-        shippingPaise: 0,
+        shippingPaise: 1000,
         codAllowed: false,
         codFeePaise: 0,
       }).addresses[0];
