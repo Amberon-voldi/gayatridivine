@@ -21,20 +21,38 @@ export async function POST(request) {
     }
 
     const responseAddresses = addresses.map((addr) => {
-      const resp = buildShippingMethodsResponse({
-        addressId: String(addr.id ?? "0"),
-        zipcode: String(addr.zipcode ?? ""),
-        shippingPaise: 1000,
-        codAllowed: false,
-        codFeePaise: 0,
-      }).addresses[0];
+      const id = String(addr.id ?? "0");
+      const zipcode = String(addr.zipcode ?? "");
+      const state_code = addr.state_code || addr.state || "";
+      const country = (addr.country || "IN").toUpperCase();
+
+      const shipping_methods = [
+        {
+          id: "1",
+          description: "Free shipping",
+          name: "Delivery within 5 days",
+          serviceable: true,
+          shipping_fee: 1000,
+          cod: true,
+          cod_fee: 1000,
+        },
+        {
+          id: "2",
+          description: "Standard Delivery",
+          name: "Delivered on the same day",
+          serviceable: true,
+          shipping_fee: 1000,
+          cod: false,
+          cod_fee: 0,
+        },
+      ];
 
       return {
-        id: String(resp.id ?? addr.id ?? "0"),
-        zipcode: String(resp.zipcode ?? addr.zipcode ?? ""),
-        state_code: addr.state_code || addr.state || "",
-        country: (addr.country || resp.country || "IN").toUpperCase(),
-        shipping_methods: resp.shipping_methods,
+        id,
+        zipcode,
+        state_code,
+        country,
+        shipping_methods,
       };
     });
 
