@@ -20,15 +20,23 @@ export async function POST(request) {
       );
     }
 
-    const responseAddresses = addresses.map((addr) =>
-      buildShippingMethodsResponse({
+    const responseAddresses = addresses.map((addr) => {
+      const resp = buildShippingMethodsResponse({
         addressId: String(addr.id ?? "0"),
         zipcode: String(addr.zipcode ?? ""),
         shippingPaise: 0,
         codAllowed: false,
         codFeePaise: 0,
-      }).addresses[0]
-    );
+      }).addresses[0];
+
+      return {
+        id: String(resp.id ?? addr.id ?? "0"),
+        zipcode: String(resp.zipcode ?? addr.zipcode ?? ""),
+        state_code: addr.state_code || addr.state || "",
+        country: (addr.country || resp.country || "IN").toUpperCase(),
+        shipping_methods: resp.shipping_methods,
+      };
+    });
 
     console.log("[shipping-info] responseAddresses:", JSON.stringify(responseAddresses));
 
