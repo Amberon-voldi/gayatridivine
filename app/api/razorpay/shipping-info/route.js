@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request) {
   try {
+    const start = Date.now();
     const body = await request.json();
     console.log("[shipping-info] incoming body:", JSON.stringify(body));
     const addresses = body.addresses || [];
@@ -56,14 +57,18 @@ export async function POST(request) {
       };
     });
 
-    console.log("[shipping-info] responseAddresses:", JSON.stringify(responseAddresses));
+    const duration = Date.now() - start;
+    console.log("[shipping-info] responseAddresses:", JSON.stringify(responseAddresses), "duration_ms:", duration);
 
-    return NextResponse.json({ addresses: responseAddresses });
+    return NextResponse.json(
+      { addresses: responseAddresses },
+      { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("Magic Checkout shipping-info error:", error);
     return NextResponse.json(
       { error: error.message || "Shipping info failed" },
-      { status: 500 }
+      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
