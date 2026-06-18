@@ -27,7 +27,51 @@ export default function MagicCheckoutButton({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  const keyId = razorpayKeyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+  const loadExternalScript = (src) =>
+    new Promise((resolve, reject) => {
+      if (typeof window === "undefined") return reject(new Error("no-window"));
+      if (window.Razorpay) return resolve();
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.getAttribute("data-loaded") === "true") return resolve();
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", () => reject(new Error("failed to load")));
+        return;
+      }
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onload = () => {
+        s.setAttribute("data-loaded", "true");
+        resolve();
+      };
+      s.onerror = () => reject(new Error("failed to load"));
+      document.body.appendChild(s);
+    });
+
+  const ensureRazorpayReady = async (timeout = 3000) => {
+    if (typeof window === "undefined") return false;
+    if (window.Razorpay) {
+      setScriptReady(true);
+      return true;
+    }
+
+    try {
+      await Promise.race([
+        loadExternalScript(MAGIC_CHECKOUT_SCRIPT),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), timeout)),
+      ]);
+      if (window.Razorpay) {
+        setScriptReady(true);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
 
   const verifyPayment = async (paymentData) => {
     console.log("[MagicCheckout] verifyPayment payload:", paymentData);
@@ -124,8 +168,11 @@ export default function MagicCheckoutButton({
       return;
     }
 
-    if (!scriptReady || typeof window.Razorpay === "undefined") {
+    // Ensure the Razorpay script is available (try fast fallback loader)
+    const ready = await ensureRazorpayReady(2000);
+    if (!ready) {
       setError("Checkout is still loading. Please try again.");
+      setIsProcessing(false);
       return;
     }
 
@@ -208,7 +255,7 @@ export default function MagicCheckoutButton({
     <>
       <Script
         src={MAGIC_CHECKOUT_SCRIPT}
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         onLoad={() => setScriptReady(true)}
         onError={() => setError("Failed to load payment checkout.")}
       />
