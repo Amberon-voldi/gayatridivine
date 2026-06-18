@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { buildShippingMethodsResponse } from "@/lib/razorpay.server";
 import fs from "fs/promises";
 import path from "path";
 
@@ -33,20 +32,11 @@ export async function POST(request) {
 
       const shipping_methods = [
         {
-          id: "1",
-          description: "Free shipping",
-          name: "Delivery within 5 days",
-          serviceable: true,
-          shipping_fee: 1000,
-          cod: true,
-          cod_fee: 1000,
-        },
-        {
-          id: "2",
+          id: "standard",
           description: "Standard Delivery",
-          name: "Delivered on the same day",
+          name: "Standard Delivery",
           serviceable: true,
-          shipping_fee: 1000,
+          shipping_fee: 0,
           cod: false,
           cod_fee: 0,
         },
