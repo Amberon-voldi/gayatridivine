@@ -139,7 +139,7 @@ export default function CartPage() {
                     process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
                     settings?.payment?.razorpayKeyId
                   }
-                  label="Pay with Magic Checkout"
+                  label="Order Now"
                 />
               ) : (
                 <Link
