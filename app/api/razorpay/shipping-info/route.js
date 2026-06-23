@@ -37,7 +37,7 @@ export async function POST(request) {
           name: "Standard Delivery",
           serviceable: true,
           shipping_fee: 0,
-          cod: false,
+          cod: true,
           cod_fee: 0,
         },
       ];
